@@ -10,18 +10,33 @@ const DispatcherMapScreen: React.FC = () => {
   const [longitude, setLongitude] = useState<any>(0);
 
   useEffect(() => {
+    let subscription: Location.LocationSubscription | null = null;
     const requestLocationPermission = async () => {
       try {
+        // Request permission
         const {status} = await Location.requestForegroundPermissionsAsync();
         if (status !== 'granted') {
           setErrorMsg('Location permission not granted');
           throw new Error('Location permission not granted');
         }
         const location = await Location.getCurrentPositionAsync({});
+
+        // Print current location
         console.log('Current location:', location);
         setLatitude(location.coords.latitude);
         setLongitude(location.coords.longitude);
         setLocation(location);
+        // Get updates on location
+        subscription = await Location.watchPositionAsync(
+          {
+            accuracy: Location.Accuracy.High,
+            timeInterval: 1000, // Update every second
+            distanceInterval: 1, // Update when user moves by 1 meter
+          },
+          newLocation => {
+            setLocation(newLocation);
+          },
+        );
       } catch (error) {
         console.error('Error requesting location permission:', error);
       }
@@ -47,7 +62,7 @@ const DispatcherMapScreen: React.FC = () => {
 
   // Define marker coordinates
   const marker1 = {latitude: latitude, longitude: longitude};
-  const marker2 = {latitude: latitude + 0.01, longitude: longitude + 0.01}; // second marker placeholder
+  const marker2 = {latitude: latitude - 0.01, longitude: longitude - 0.01}; // second marker placeholder
 
   // Calculate bounds
   const minLat = Math.min(marker1.latitude, marker2.latitude);
@@ -71,21 +86,23 @@ const DispatcherMapScreen: React.FC = () => {
           latitudeDelta: deltaLat + padding * deltaLat,
           longitudeDelta: deltaLng + padding * deltaLng,
         }}>
+                {/* Dispatcher marker */}
         <Marker
           coordinate={{
-            latitude: marker1.latitude,
-            longitude: marker1.longitude,
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude,
           }}
           title="Dispatcher"
           description="This is your current location"
         />
+        {/*  Caller marker */}
         <Marker
           coordinate={{
-                latitude: marker2.latitude,
-                longitude: marker2.longitude,
+            latitude: marker2.latitude,
+            longitude: marker2.longitude,
           }}
           title="Caller"
-          description="This is your current location"
+          description="This is the caller's current location"
         />
       </MapView>
     </View>

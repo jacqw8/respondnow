@@ -7,12 +7,18 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import * as Location from 'expo-location';
+import axios from 'axios';
+
+const key1 = 'AIzaSy';
+const key2 = 'BQMZyEJ3krGmHOo';
+const key3 = 'YO4L1IF7XKlg3tlDqA';
+const GOOGLE_MAPS_API_KEY = key1 + key2 + key3;
 
 const InfoScreen: React.FC = () => {
   const [location, setLocation] = useState<any>(null);
   const [errorMsg, setErrorMsg] = useState('');
-  const [latitude, setLatitude] = useState<any>(null);
-  const [longitude, setLongitude] = useState<any>(null);
+  const [callerLatitude, setCallerLatitude] = useState<any>(null);
+  const [callerLongitude, setCallerLongitude] = useState<any>(null);
 
   //   Caller/patient info
   const [callerLocation, setCallerLocation] = useState('');
@@ -29,8 +35,6 @@ const InfoScreen: React.FC = () => {
         }
         const location = await Location.getCurrentPositionAsync({});
         console.log('Current location:', location);
-        setLatitude(location.coords.latitude);
-        setLongitude(location.coords.longitude);
         setLocation(location);
       } catch (error) {
         console.error('Error requesting location permission:', error);
@@ -47,8 +51,40 @@ const InfoScreen: React.FC = () => {
     text = JSON.stringify(location);
   }
 
+  //   convert an address to coords
+  const addressToCoords = async (address: string) => {
+    console.log(
+      'sending this:',
+      `https://nominatim.openstreetmap.org/search.php?q=${address}&format=jsonv2`,
+    );
+    try {
+      const response = await axios.get(
+        `https://nominatim.openstreetmap.org/search.php?q=${address}&format=jsonv2`,
+      );
+      if (response.data) {
+        console.log('response:', response.data);
+        // example data [{"addresstype": "place", "boundingbox": ["37.7785470", "37.7786470", "-122.4184050", "-122.4183050"], 
+        // "category": "place", "display_name": "1, Polk Street, Civic Center, San Francisco, California, 94102, United States", 
+        // "importance": 0.00000999999999995449, "lat": "37.778597", "licence": "Data © OpenStreetMap contributors, ODbL 1.0. 
+        // http://osm.org/copyright", "lon": "-122.418355", "name": "", "osm_id": 706533481, "osm_type": "way", 
+        // "place_id": 344025875, "place_rank": 30, "type": "house"}]
+        // console.log('response lat:', response.data[0].lat);
+        setCallerLatitude(response.data[0].lat);
+        setCallerLongitude(response.data[0].lon);
+        return;
+      } else {
+        throw new Error('No results found');
+      }
+    } catch (error) {
+      console.error('Error geocoding address:', error);
+      throw error;
+    }
+  };
+
+
   const sendToResponder = () => {
     console.log('Sending to responder:', {callerLocation, symptoms, context});
+    addressToCoords(callerLocation);
   };
 
   return (
