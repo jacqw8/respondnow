@@ -19,17 +19,17 @@ const HomeScreen: React.FC = () => {
     <View style={styles.container}>
       <TouchableOpacity
         style={styles.button}
-        onPress={() => navigation.navigate('Dispatcher')}>
+        onPress={() => navigation.replace('Dispatcher')}>
         <Text style={styles.buttonText}>Dispatcher</Text>
       </TouchableOpacity>
       <TouchableOpacity
         style={styles.button}
-        onPress={() => navigation.navigate('Responder')}>
+        onPress={() => navigation.replace('Responder')}>
         <Text style={styles.buttonText}>Responder</Text>
       </TouchableOpacity>
       <TouchableOpacity
         style={styles.button}
-        onPress={() => navigation.navigate('Caller')}>
+        onPress={() => navigation.replace('Caller')}>
         <Text style={styles.buttonText}>Caller</Text>
       </TouchableOpacity>
     </View>
