@@ -5,7 +5,7 @@ import MapView, {Marker, Polyline} from 'react-native-maps';
 import polyline from '@mapbox/polyline';
 import axios from 'axios';
 import db from '../../firebase';
-import {ref, set} from 'firebase/database';
+import {ref, update} from 'firebase/database';
 import {getAuth} from 'firebase/auth';
 
 const ResponderMapScreen: React.FC = () => {
@@ -72,13 +72,11 @@ const ResponderMapScreen: React.FC = () => {
     }
     console.log('Sending location to database:', {location});
     console.log('Current user:', user);
-    const name = user.currentUser?.displayName;
-    const userId = 1;
-    set(ref(db, `responders/${userId}`), {
+    const userId = user.currentUser?.uid;
+    update(ref(db, `responders/${userId}`), {
       latitude: location.coords.latitude,
       longitude: location.coords.longitude,
       timestamp: location.timestamp,
-      name: name,
     });
   };
   useEffect(() => {

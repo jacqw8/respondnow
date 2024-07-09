@@ -1,5 +1,13 @@
 import React, {useState, useEffect} from 'react';
-import {View, StyleSheet, TextInput, Text, Button, Alert} from 'react-native';
+import {
+  View,
+  StyleSheet,
+  TextInput,
+  Text,
+  Button,
+  Alert,
+  TouchableOpacity,
+} from 'react-native';
 import {auth, db} from '../../firebase';
 import {
   signInWithEmailAndPassword,
@@ -18,17 +26,17 @@ const AuthScreen: React.FC = () => {
   const [errorMsg, setError] = useState('');
 
   useEffect(() => {
-    const subscriber = onAuthStateChanged(auth, user => {
-      if (user) {
-        setUser(user);
-        console.log('User is signed in: ', user);
-      } else {
-        setUser(null);
-        console.log('No user is signed in.');
-      }
-    });
-    return subscriber; // unsubscribe on unmount
-  }, []);
+        const subscriber = onAuthStateChanged(auth, (user) => {
+          if (user) {
+            setUser(user);
+            console.log('User is signed in: ', user);
+          } else {
+            setUser(null);
+            console.log('No user is signed in.');
+          }
+        });
+        return subscriber; // unsubscribe on unmount
+      }, []);
 
   const handleSignUp = async () => {
     try {
@@ -80,21 +88,19 @@ const AuthScreen: React.FC = () => {
   };
 
   const handleSignIn = async () => {
-    // Check if the email belongs to a dispatcher
-    const isDispatcher = await isDispatcherEmail(email);
-    if (isDispatcher) {
-      try {
-        const userCredential = await signInWithEmailAndPassword(
-          auth,
-          email,
-          password,
-        );
-      } catch (error) {
-        setError(error.message);
-        Alert.alert('Error', errorMsg);
-      }
-    } else {
-        Alert.alert('Error', 'Not a dispatcher!');
+    // Check if the email belongs to a responder
+    try {
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password,
+      );
+      setUser(userCredential.user);
+      console.log('signed in');
+    } catch (error) {
+      setUser(null);
+      setError(error.message);
+      Alert.alert('Error', errorMsg);
     }
   };
 
@@ -109,7 +115,7 @@ const AuthScreen: React.FC = () => {
   };
 
   return (
-    <View>
+    <View style={styles.container}>
       {user ? (
         <View>
           <Text>Welcome!</Text>
@@ -134,8 +140,18 @@ const AuthScreen: React.FC = () => {
             value={name}
             onChangeText={setName}
           />
-          <Button title="Sign Up" onPress={handleSignUp} />
-          <Button title="Log In" onPress={handleSignIn} />
+          <TouchableOpacity
+            style={styles.button}
+            title="Sign Up"
+            onPress={handleSignUp}>
+            <Text style={styles.buttonText}>Sign Up</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.button}
+            title="Log In"
+            onPress={handleSignIn}>
+            <Text style={styles.buttonText}>Log In</Text>
+          </TouchableOpacity>
         </View>
       )}
     </View>
