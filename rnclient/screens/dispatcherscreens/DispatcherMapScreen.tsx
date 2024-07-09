@@ -9,14 +9,12 @@ const DispatcherMapScreen: React.FC = () => {
   const [location, setLocation] = useState<any>(null);
   const [errorMsg, setErrorMsg] = useState('');
     const [routeCoordinates, setRouteCoordinates] = useState([]);
-//   let routeCoordinates = [];
   const [marker1, setMarker1] = useState<any>(null);
   const [marker2, setMarker2] = useState<any>(null);
   const [distance, setDistance] = useState<number>(0);
   const [deltaLat, setDeltaLat] = useState<any>(null);
   const [deltaLng, setDeltaLng] = useState<any>(null);
   const padding = 1.2;
-  let arr = [];
 
   useEffect(() => {
     let subscription: Location.LocationSubscription | null = null;

@@ -8,6 +8,8 @@ import {
 } from 'react-native';
 import * as Location from 'expo-location';
 import axios from 'axios';
+import {db} from '../../firebase';
+import {ref, set} from 'firebase/database';
 
 const InfoScreen: React.FC = () => {
   const [location, setLocation] = useState<any>(null);
@@ -58,10 +60,10 @@ const InfoScreen: React.FC = () => {
       );
       if (response.data) {
         console.log('response:', response.data);
-        // example data [{"addresstype": "place", "boundingbox": ["37.7785470", "37.7786470", "-122.4184050", "-122.4183050"], 
-        // "category": "place", "display_name": "1, Polk Street, Civic Center, San Francisco, California, 94102, United States", 
-        // "importance": 0.00000999999999995449, "lat": "37.778597", "licence": "Data © OpenStreetMap contributors, ODbL 1.0. 
-        // http://osm.org/copyright", "lon": "-122.418355", "name": "", "osm_id": 706533481, "osm_type": "way", 
+        // example data [{"addresstype": "place", "boundingbox": ["37.7785470", "37.7786470", "-122.4184050", "-122.4183050"],
+        // "category": "place", "display_name": "1, Polk Street, Civic Center, San Francisco, California, 94102, United States",
+        // "importance": 0.00000999999999995449, "lat": "37.778597", "licence": "Data © OpenStreetMap contributors, ODbL 1.0.
+        // http://osm.org/copyright", "lon": "-122.418355", "name": "", "osm_id": 706533481, "osm_type": "way",
         // "place_id": 344025875, "place_rank": 30, "type": "house"}]
         // console.log('response lat:', response.data[0].lat);
         setCallerLatitude(response.data[0].lat);
@@ -76,10 +78,15 @@ const InfoScreen: React.FC = () => {
     }
   };
 
-
   const sendToResponder = () => {
     console.log('Sending to responder:', {callerLocation, symptoms, context});
     addressToCoords(callerLocation);
+    let userId = 1;
+    console.log(db);
+    set(ref(db, `dispatchers/${userId}`), {
+      symptoms: symptoms,
+      context: context,
+    });
   };
 
   return (
@@ -145,7 +152,7 @@ const styles = StyleSheet.create({
 
 export default InfoScreen;
 
-// To-do: 
+// To-do:
 // Push information after send alert to backend,
 // all responders in a certain location (within the radius) will receive it
 // Be able to message the responders

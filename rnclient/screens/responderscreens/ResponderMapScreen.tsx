@@ -4,19 +4,19 @@ import * as Location from 'expo-location';
 import MapView, {Marker, Polyline} from 'react-native-maps';
 import polyline from '@mapbox/polyline';
 import axios from 'axios';
+import db from '../../firebase';
+import {ref, set} from 'firebase/database';
 
 const ResponderMapScreen: React.FC = () => {
   const [location, setLocation] = useState<any>(null);
   const [errorMsg, setErrorMsg] = useState('');
-    const [routeCoordinates, setRouteCoordinates] = useState([]);
-//   let routeCoordinates = [];
+  const [routeCoordinates, setRouteCoordinates] = useState([]);
   const [marker1, setMarker1] = useState<any>(null);
   const [marker2, setMarker2] = useState<any>(null);
   const [distance, setDistance] = useState<number>(0);
   const [deltaLat, setDeltaLat] = useState<any>(null);
   const [deltaLng, setDeltaLng] = useState<any>(null);
   const padding = 1.2;
-  let arr = [];
 
   useEffect(() => {
     let subscription: Location.LocationSubscription | null = null;
@@ -57,6 +57,8 @@ const ResponderMapScreen: React.FC = () => {
       }
     };
     requestLocationPermission();
+    console.log('sending loc to db');
+    sendLocToDb();
 
     return () => {
       if (subscription) {
@@ -118,8 +120,8 @@ const ResponderMapScreen: React.FC = () => {
 
   useEffect(() => {
     const fetchDirections = async () => {
-//       console.log('marker1:', marker1);
-//       console.log('marker2:', marker2);
+      //       console.log('marker1:', marker1);
+      //       console.log('marker2:', marker2);
       if (marker1 && marker2 && routeCoordinates.length == 0) {
         try {
           console.log('getting route api');
@@ -135,7 +137,7 @@ const ResponderMapScreen: React.FC = () => {
           //     longitude: coord[0],
           //   }));
           setRouteCoordinates(coords);
-            console.log('route coords:', routeCoordinates);
+          console.log('route coords:', routeCoordinates);
         } catch (error) {
           console.error('Error fetching directions:', error);
         }
@@ -143,6 +145,10 @@ const ResponderMapScreen: React.FC = () => {
     };
     fetchDirections();
   }, [marker1, marker2, routeCoordinates]);
+
+  const sendLocToDb = async () => {
+    if (!location) return;
+  };
 
   if (!location) {
     return (
