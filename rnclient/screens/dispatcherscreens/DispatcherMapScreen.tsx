@@ -4,17 +4,81 @@ import * as Location from 'expo-location';
 import MapView, {Marker, Circle, Polyline} from 'react-native-maps';
 import polyline from '@mapbox/polyline';
 import axios from 'axios';
+import {db} from '../../firebase';
+import {ref, onValue} from 'firebase/database';
 
 const DispatcherMapScreen: React.FC = () => {
   const [location, setLocation] = useState<any>(null);
   const [errorMsg, setErrorMsg] = useState('');
-    const [routeCoordinates, setRouteCoordinates] = useState([]);
+  const [routeCoordinates, setRouteCoordinates] = useState([]);
   const [marker1, setMarker1] = useState<any>(null);
   const [marker2, setMarker2] = useState<any>(null);
   const [distance, setDistance] = useState<number>(0);
   const [deltaLat, setDeltaLat] = useState<any>(null);
   const [deltaLng, setDeltaLng] = useState<any>(null);
   const padding = 1.2;
+  const [responderLocations, setResponderLocations] = useState([]);
+  const [filteredResponders, setFilteredResponders] = useState([]);
+
+  // Calculate distance between markers
+  const calculateDistance = (
+    lat1: Number,
+    lon1: Number,
+    lat2: Number,
+    lon2: Number,
+  ) => {
+    const R = 6371; // Radius of the Earth in km
+
+    const dLat = deg2rad(lat2 - lat1);
+    const dLon = deg2rad(lon2 - lon1);
+
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(deg2rad(lat1)) *
+        Math.cos(deg2rad(lat2)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distance = R * c; // Distance in km
+    return distance;
+  };
+
+  const deg2rad = (deg: number) => {
+    return deg * (Math.PI / 180);
+  };
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const respondersRef = ref(db, 'responders');
+      onValue(respondersRef, snapshot => {
+        const data = snapshot.val();
+        const locations = data ? Object.values(data) : [];
+        setResponderLocations(locations);
+      });
+      console.log('responders', responderLocations);
+    }, 10000);
+    return () => clearInterval(interval);
+  });
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (responderLocations.length > 0) {
+        const filtered = responderLocations.filter(loc => {
+          const dist = calculateDistance(
+            location.coords.latitude,
+            location.coords.longitude,
+            loc.latitude,
+            loc.longitude,
+          );
+          return dist;
+        });
+        setFilteredResponders(filtered);
+        console.log('filtered responders', filtered);
+      }
+    }, 10000);
+    return () => clearInterval(interval);
+  }, [responderLocations, location]);
 
   useEffect(() => {
     let subscription: Location.LocationSubscription | null = null;
@@ -75,34 +139,6 @@ const DispatcherMapScreen: React.FC = () => {
       setDeltaLat(maxLat - minLat);
       setDeltaLng(maxLng - minLng);
 
-      // Calculate distance between markers
-      const calculateDistance = (
-        lat1: Number,
-        lon1: Number,
-        lat2: Number,
-        lon2: Number,
-      ) => {
-        const R = 6371; // Radius of the Earth in km
-
-        const dLat = deg2rad(lat2 - lat1);
-        const dLon = deg2rad(lon2 - lon1);
-
-        const a =
-          Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-          Math.cos(deg2rad(lat1)) *
-            Math.cos(deg2rad(lat2)) *
-            Math.sin(dLon / 2) *
-            Math.sin(dLon / 2);
-
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        const distance = R * c; // Distance in km
-        return distance;
-      };
-
-      const deg2rad = (deg: number) => {
-        return deg * (Math.PI / 180);
-      };
-
       setDistance(
         calculateDistance(
           marker1.latitude,
@@ -116,8 +152,8 @@ const DispatcherMapScreen: React.FC = () => {
 
   useEffect(() => {
     const fetchDirections = async () => {
-//       console.log('marker1:', marker1);
-//       console.log('marker2:', marker2);
+      //       console.log('marker1:', marker1);
+      //       console.log('marker2:', marker2);
       if (marker1 && marker2 && routeCoordinates.length == 0) {
         try {
           console.log('getting route api');
@@ -133,7 +169,7 @@ const DispatcherMapScreen: React.FC = () => {
           //     longitude: coord[0],
           //   }));
           setRouteCoordinates(coords);
-            console.log('route coords:', routeCoordinates);
+          console.log('route coords:', routeCoordinates);
         } catch (error) {
           console.error('Error fetching directions:', error);
         }
@@ -185,6 +221,18 @@ const DispatcherMapScreen: React.FC = () => {
                 description="This is your current location"
               />
             )}
+            {/* Responder markers */}
+            {responderLocations.map((location, index) => (
+              <Marker
+                key={index}
+                coordinate={{
+                  latitude: location.latitude,
+                  longitude: location.longitude,
+                }}
+                title={`Responder ${index + 1}`}
+                description="Responder location"
+              />
+            ))}
             {/* Caller marker */}
             {marker2 && (
               <Marker
@@ -237,6 +285,6 @@ const styles = StyleSheet.create({
 
 export default DispatcherMapScreen;
 
-// To-do: 
+// To-do:
 // Change icons
 // Set up backend and pull responder markers into this map

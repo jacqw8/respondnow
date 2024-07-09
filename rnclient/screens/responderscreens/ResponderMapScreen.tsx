@@ -144,33 +144,36 @@ const ResponderMapScreen: React.FC = () => {
     }
   }, [marker1, marker2]);
 
-  useEffect(() => {
-    const fetchDirections = async () => {
-      //       console.log('marker1:', marker1);
-      //       console.log('marker2:', marker2);
-      if (marker1 && marker2 && routeCoordinates.length == 0) {
-        try {
-          console.log('getting route api');
-          const token =
-            '5b3ce3597851110001cf6248a9e9053d3f984724af7233d4c4c60f87';
-          const url = `https://api.openrouteservice.org/v2/directions/driving-car?api_key=${token}&start=${marker1.longitude},${marker1.latitude}&end=${marker2.longitude},${marker2.latitude}`;
+  // useEffect(() => {
+  //   const fetchDirections = async () => {
+  //     //       console.log('marker1:', marker1);
+  //     //       console.log('marker2:', marker2);
+  //     if (marker1 && marker2) {
+  //       try {
+  //         console.log('getting route api');
+  //         const token =
+  //           '5b3ce3597851110001cf6248a9e9053d3f984724af7233d4c4c60f87';
+  //         const url = `https://api.openrouteservice.org/v2/directions/driving-car?api_key=${token}&start=${marker1.longitude},${marker1.latitude}&end=${marker2.longitude},${marker2.latitude}`;
 
-          console.log('url:', url);
-          const response = await axios.get(url);
-          const coords = response.data.features[0].geometry.coordinates;
-          //   const latlng = coords.map((coord: Number) => ({
-          //     latitude: coord[1],
-          //     longitude: coord[0],
-          //   }));
-          setRouteCoordinates(coords);
-          console.log('route coords:', routeCoordinates);
-        } catch (error) {
-          console.error('Error fetching directions:', error);
-        }
-      }
-    };
-    fetchDirections();
-  }, [marker1, marker2, routeCoordinates]);
+  //         console.log('url:', url);
+  //         const response = await axios.get(url);
+  //         const coords = response.data.features[0].geometry.coordinates;
+  //         //   const latlng = coords.map((coord: Number) => ({
+  //         //     latitude: coord[1],
+  //         //     longitude: coord[0],
+  //         //   }));
+  //         setRouteCoordinates(coords);
+  //         console.log('route coords:', routeCoordinates);
+  //       } catch (error) {
+  //         console.error('Error fetching directions:', error);
+  //       }
+  //     }
+  //   };
+  //   const interval = setInterval(() => {
+  //     fetchDirections();
+  //   }, 15000);
+
+  // }, [marker1, marker2, routeCoordinates]);
 
   if (!location) {
     return (
@@ -186,8 +189,7 @@ const ResponderMapScreen: React.FC = () => {
       {marker1 &&
         marker2 &&
         deltaLat !== null &&
-        deltaLng !== null &&
-        routeCoordinates.length > 0 && (
+        deltaLng !== null && (
           <MapView
             style={styles.map}
             initialRegion={{
@@ -229,14 +231,14 @@ const ResponderMapScreen: React.FC = () => {
             )}
             {/* Render route */}
 
-            <Polyline
+            {/* <Polyline
               coordinates={routeCoordinates.map(c => ({
                 latitude: c[1],
                 longitude: c[0],
               }))}
               strokeColor="#FF0000"
               strokeWidth={3}
-            />
+            /> */}
           </MapView>
         )}
     </View>

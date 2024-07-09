@@ -10,12 +10,14 @@ import * as Location from 'expo-location';
 import axios from 'axios';
 import {db} from '../../firebase';
 import {ref, set} from 'firebase/database';
+import {getAuth} from 'firebase/auth';
 
 const InfoScreen: React.FC = () => {
   const [location, setLocation] = useState<any>(null);
   const [errorMsg, setErrorMsg] = useState('');
   const [callerLatitude, setCallerLatitude] = useState<any>(null);
   const [callerLongitude, setCallerLongitude] = useState<any>(null);
+  const user = getAuth(); // dispatcher user
 
   //   Caller/patient info
   const [callerLocation, setCallerLocation] = useState('');
@@ -51,7 +53,7 @@ const InfoScreen: React.FC = () => {
   //   convert an address to coords
   const addressToCoords = async (address: string) => {
     console.log(
-      'sending this:',
+      'geocoding this:',
       `https://nominatim.openstreetmap.org/search.php?q=${address}&format=jsonv2`,
     );
     try {
@@ -68,7 +70,7 @@ const InfoScreen: React.FC = () => {
         // console.log('response lat:', response.data[0].lat);
         setCallerLatitude(response.data[0].lat);
         setCallerLongitude(response.data[0].lon);
-        return;
+        return {lat: response.data[0].lat, lon: response.data[0].lon};
       } else {
         throw new Error('No results found');
       }
@@ -78,15 +80,18 @@ const InfoScreen: React.FC = () => {
     }
   };
 
-  const sendToResponder = () => {
+  const sendToResponder = async () => {
     console.log('Sending to responder:', {callerLocation, symptoms, context});
-    addressToCoords(callerLocation);
-    let userId = 1;
-    console.log(db);
-    set(ref(db, `dispatchers/${userId}`), {
+    const {lat, lon} = await addressToCoords(callerLocation);
+    console.log('Coordinates:', {lat, lon});
+    const userId = user.currentUser?.uid;
+    await set(ref(db, `emergency/${userId}`), {
+      callerLatitude: lat,
+      callerLongitude: lon,
       symptoms: symptoms,
       context: context,
     });
+    console.log('updated emergency to db');
   };
 
   return (
@@ -153,6 +158,5 @@ const styles = StyleSheet.create({
 export default InfoScreen;
 
 // To-do:
-// Push information after send alert to backend,
 // all responders in a certain location (within the radius) will receive it
 // Be able to message the responders
