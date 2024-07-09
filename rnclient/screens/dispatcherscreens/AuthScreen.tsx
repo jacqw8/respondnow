@@ -1,6 +1,6 @@
 import React, {useState, useEffect} from 'react';
 import {View, StyleSheet, TextInput, Text, Button, Alert} from 'react-native';
-import {auth} from '../../firebase';
+import {auth, db} from '../../firebase';
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -8,27 +8,27 @@ import {
   onAuthStateChanged,
   updateProfile,
 } from 'firebase/auth';
+import {ref, set, child, get} from 'firebase/database';
 
 const AuthScreen: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
+  const [name, setName] = useState('');
   const [user, setUser] = useState(null);
   const [errorMsg, setError] = useState('');
 
   useEffect(() => {
-        const subscriber = onAuthStateChanged(auth, (user) => {
-          if (user) {
-            setUser(user);
-            console.log('User is signed in: ', user);
-          } else {
-            setUser(null);
-            console.log('No user is signed in.');
-          }
-        });
-        return subscriber; // unsubscribe on unmount
-      }, []);
+    const subscriber = onAuthStateChanged(auth, user => {
+      if (user) {
+        setUser(user);
+        console.log('User is signed in: ', user);
+      } else {
+        setUser(null);
+        console.log('No user is signed in.');
+      }
+    });
+    return subscriber; // unsubscribe on unmount
+  }, []);
 
   const handleSignUp = async () => {
     try {
@@ -38,9 +38,15 @@ const AuthScreen: React.FC = () => {
         password,
       );
       setUser(userCredential.user);
-      const name = firstName + ' ' + lastName;
       await updateProfile(userCredential.user, {
         displayName: `${name}`,
+      });
+      const userId = userCredential.user.uid;
+      set(ref(db, `dispatchers/${userId}`), {
+        name: name,
+        userId: userId,
+        email: email,
+        role: 'dispatcher',
       });
     } catch (error) {
       setError(error.message);
@@ -48,17 +54,47 @@ const AuthScreen: React.FC = () => {
     }
   };
 
-  const handleSignIn = async () => {
+  // Function to check if the email belongs to a dispatcher
+  const isDispatcherEmail = async email => {
     try {
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        email,
-        password,
-      );
-      setUser(userCredential.user);
+      // Check if the email belongs to a dispatcher
+      const dbRef = ref(db, 'dispatchers');
+      const snapshot = await get(dbRef);
+
+      if (snapshot.exists()) {
+        // Iterate through snapshot to check if email exists in dispatchers
+        const dispatchers = snapshot.val();
+        const dispatcherEmails = Object.values(dispatchers).map(
+          dispatcher => dispatcher.email,
+        );
+
+        return dispatcherEmails.includes(email);
+      } else {
+        console.log('No dispatchers found in database');
+        return false;
+      }
     } catch (error) {
-      setError(error.message);
-      Alert.alert('Error', errorMsg);
+      console.error('Error checking user role:', error.message);
+      return false;
+    }
+  };
+
+  const handleSignIn = async () => {
+    // Check if the email belongs to a dispatcher
+    const isDispatcher = await isDispatcherEmail(email);
+    if (isDispatcher) {
+      try {
+        const userCredential = await signInWithEmailAndPassword(
+          auth,
+          email,
+          password,
+        );
+      } catch (error) {
+        setError(error.message);
+        Alert.alert('Error', errorMsg);
+      }
+    } else {
+        Alert.alert('Error', 'Not a dispatcher!');
     }
   };
 
@@ -74,9 +110,9 @@ const AuthScreen: React.FC = () => {
 
   return (
     <View>
-       {user ? (
+      {user ? (
         <View>
-          <Text>Welcome, {user.displayName}</Text>
+          <Text>Welcome!</Text>
           <Button title="Sign Out" onPress={handleSignOut} />
         </View>
       ) : (
@@ -94,14 +130,9 @@ const AuthScreen: React.FC = () => {
             secureTextEntry
           />
           <TextInput
-            placeholder="First Name (Sign up only)"
-            value={firstName}
-            onChangeText={setFirstName}
-          />
-          <TextInput
-            placeholder="Last Name (Sign up only)"
-            value={lastName}
-            onChangeText={setLastName}
+            placeholder="Name (Sign up only)"
+            value={name}
+            onChangeText={setName}
           />
           <Button title="Sign Up" onPress={handleSignUp} />
           <Button title="Log In" onPress={handleSignIn} />

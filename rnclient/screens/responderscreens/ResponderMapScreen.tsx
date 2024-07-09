@@ -6,6 +6,7 @@ import polyline from '@mapbox/polyline';
 import axios from 'axios';
 import db from '../../firebase';
 import {ref, set} from 'firebase/database';
+import {getAuth} from 'firebase/auth';
 
 const ResponderMapScreen: React.FC = () => {
   const [location, setLocation] = useState<any>(null);
@@ -17,6 +18,7 @@ const ResponderMapScreen: React.FC = () => {
   const [deltaLat, setDeltaLat] = useState<any>(null);
   const [deltaLng, setDeltaLng] = useState<any>(null);
   const padding = 1.2;
+  const user = getAuth();
 
   useEffect(() => {
     let subscription: Location.LocationSubscription | null = null;
@@ -57,15 +59,35 @@ const ResponderMapScreen: React.FC = () => {
       }
     };
     requestLocationPermission();
-    console.log('sending loc to db');
-    sendLocToDb();
-
     return () => {
       if (subscription) {
         subscription.remove();
       }
     };
   }, []);
+
+  const sendLocToDb = async () => {
+    if (!location) {
+      return;
+    }
+    console.log('Sending location to database:', {location});
+    console.log('Current user:', user);
+    const name = user.currentUser?.displayName;
+    const userId = 1;
+    set(ref(db, `responders/${userId}`), {
+      latitude: location.coords.latitude,
+      longitude: location.coords.longitude,
+      timestamp: location.timestamp,
+      name: name,
+    });
+  };
+  useEffect(() => {
+    if (location) {
+      console.log('sending loc to db');
+      sendLocToDb();
+      console.log('sent to db');
+    }
+  }, [location]);
 
   useEffect(() => {
     if (marker1 && marker2) {
@@ -145,10 +167,6 @@ const ResponderMapScreen: React.FC = () => {
     };
     fetchDirections();
   }, [marker1, marker2, routeCoordinates]);
-
-  const sendLocToDb = async () => {
-    if (!location) return;
-  };
 
   if (!location) {
     return (
