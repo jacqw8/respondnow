@@ -1,34 +1,26 @@
-import React from 'react';
-import {View, StyleSheet, TouchableOpacity, Text} from 'react-native';
-// import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-// import {useNavigation} from '@react-navigation/native';
+import React, {useState, useEffect} from 'react';
+import {
+  View,
+  StyleSheet,
+  TextInput,
+  Text,
+  TouchableOpacity,
+} from 'react-native';
+import * as Location from 'expo-location';
+import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 
-// type RootStackParamList = {
-//   Home: undefined;
-//   Dispatcher: undefined;
-//   Responder: undefined;
-//   Caller: undefined;
-// };
+import ResponderInfoScreen from './responderscreens/ResponderInfoScreen';
+import ResponderMapScreen from './responderscreens/ResponderMapScreen';
 
-// type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'Dispatcher'>;
+const Tab = createBottomTabNavigator();
 
 const ResponderScreen: React.FC = () => {
-        // const navigation = useNavigation<NavigationProp>();
-
   return (
-    <View style={styles.container}>
-      <Text>Responder Screen</Text>
-    </View>
+    <Tab.Navigator>
+      {/* <Tab.Screen name="Info" component={ResponderInfoScreen} /> */}
+      <Tab.Screen name="Map" component={ResponderMapScreen} />
+    </Tab.Navigator>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-  },
-});
 
 export default ResponderScreen;

@@ -1,11 +1,11 @@
 import {View, Text, StyleSheet} from 'react-native';
 import React, {useState, useEffect, useRef} from 'react';
 import * as Location from 'expo-location';
-import MapView, {Marker, Circle, Polyline} from 'react-native-maps';
+import MapView, {Marker, Polyline} from 'react-native-maps';
 import polyline from '@mapbox/polyline';
 import axios from 'axios';
 
-const DispatcherMapScreen: React.FC = () => {
+const ResponderMapScreen: React.FC = () => {
   const [location, setLocation] = useState<any>(null);
   const [errorMsg, setErrorMsg] = useState('');
     const [routeCoordinates, setRouteCoordinates] = useState([]);
@@ -183,7 +183,7 @@ const DispatcherMapScreen: React.FC = () => {
                   latitude: marker1.latitude,
                   longitude: marker1.longitude,
                 }}
-                title="Dispatcher"
+                title="Responder"
                 description="This is your current location"
               />
             )}
@@ -209,16 +209,6 @@ const DispatcherMapScreen: React.FC = () => {
               strokeColor="#FF0000"
               strokeWidth={3}
             />
-
-            {/* Circle around the caller marker */}
-            {marker2 && (
-              <Circle
-                center={marker2}
-                radius={distance * 1000} // in meters
-                fillColor="rgba(238, 67, 110, 0.48)"
-                strokeColor="rgba(227, 49, 58, 0.8)"
-              />
-            )}
           </MapView>
         )}
     </View>
@@ -237,8 +227,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default DispatcherMapScreen;
-
-// To-do: 
-// Change icons
-// Set up backend and pull responder markers into this map
+export default ResponderMapScreen;

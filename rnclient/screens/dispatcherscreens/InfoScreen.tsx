@@ -9,11 +9,6 @@ import {
 import * as Location from 'expo-location';
 import axios from 'axios';
 
-const key1 = 'AIzaSy';
-const key2 = 'BQMZyEJ3krGmHOo';
-const key3 = 'YO4L1IF7XKlg3tlDqA';
-const GOOGLE_MAPS_API_KEY = key1 + key2 + key3;
-
 const InfoScreen: React.FC = () => {
   const [location, setLocation] = useState<any>(null);
   const [errorMsg, setErrorMsg] = useState('');
@@ -149,3 +144,8 @@ const styles = StyleSheet.create({
 });
 
 export default InfoScreen;
+
+// To-do: 
+// Push information after send alert to backend,
+// all responders in a certain location (within the radius) will receive it
+// Be able to message the responders
