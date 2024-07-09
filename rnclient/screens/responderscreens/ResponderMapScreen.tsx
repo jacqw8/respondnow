@@ -4,7 +4,7 @@ import * as Location from 'expo-location';
 import MapView, {Marker, Polyline} from 'react-native-maps';
 import polyline from '@mapbox/polyline';
 import axios from 'axios';
-import db from '../../firebase';
+import {db} from '../../firebase';
 import {ref, update} from 'firebase/database';
 import {getAuth} from 'firebase/auth';
 
@@ -67,25 +67,31 @@ const ResponderMapScreen: React.FC = () => {
   }, []);
 
   const sendLocToDb = async () => {
-    if (!location) {
+    if (!location || !user) {
       return;
     }
     console.log('Sending location to database:', {location});
     console.log('Current user:', user);
     const userId = user.currentUser?.uid;
-    update(ref(db, `responders/${userId}`), {
-      latitude: location.coords.latitude,
-      longitude: location.coords.longitude,
-      timestamp: location.timestamp,
-    });
+    try {
+      await update(ref(db, `responders/${userId}`), {
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+        timestamp: location.timestamp,
+      });
+      console.log('Updated user with location info');
+    } catch (error) {
+      console.log('Error sending location to db:', error);
+    }
   };
+
   useEffect(() => {
     if (location) {
       console.log('sending loc to db');
       sendLocToDb();
       console.log('sent to db');
     }
-  }, [location]);
+  });
 
   useEffect(() => {
     if (marker1 && marker2) {
