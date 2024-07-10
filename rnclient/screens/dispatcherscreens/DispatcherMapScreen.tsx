@@ -9,7 +9,6 @@ import {ref, onValue, get} from 'firebase/database';
 import {getAuth} from 'firebase/auth';
 
 const DispatcherMapScreen: React.FC = () => {
-
   const [location, setLocation] = useState<any>(null);
   const [errorMsg, setErrorMsg] = useState('');
   const [routeCoordinates, setRouteCoordinates] = useState([]);
@@ -193,28 +192,29 @@ const DispatcherMapScreen: React.FC = () => {
 
   useEffect(() => {
     const fetchDirections = async () => {
-      //       console.log('marker1:', marker1);
-      //       console.log('marker2:', marker2);
-      if (marker1 && marker2 && routeCoordinates.length == 0) {
-        try {
-          console.log('getting route api');
-          const token =
-            '5b3ce3597851110001cf6248a9e9053d3f984724af7233d4c4c60f87';
-          const url = `https://api.openrouteservice.org/v2/directions/driving-car?api_key=${token}&start=${marker1.longitude},${marker1.latitude}&end=${marker2.longitude},${marker2.latitude}`;
+      const interval = setInterval(async () => {
+        if (marker1 && marker2) {
+          try {
+            console.log('getting route api');
+            const token =
+              '5b3ce3597851110001cf6248a9e9053d3f984724af7233d4c4c60f87';
+            const url = `https://api.openrouteservice.org/v2/directions/driving-car?api_key=${token}&start=${marker1.longitude},${marker1.latitude}&end=${marker2.longitude},${marker2.latitude}`;
 
-          console.log('url:', url);
-          const response = await axios.get(url);
-          const coords = response.data.features[0].geometry.coordinates;
-          //   const latlng = coords.map((coord: Number) => ({
-          //     latitude: coord[1],
-          //     longitude: coord[0],
-          //   }));
-          setRouteCoordinates(coords);
-          console.log('route coords:', routeCoordinates);
-        } catch (error) {
-          console.error('Error fetching directions:', error);
+            console.log('url:', url);
+            const response = await axios.get(url);
+            const coords = response.data.features[0].geometry.coordinates;
+            //   const latlng = coords.map((coord: Number) => ({
+            //     latitude: coord[1],
+            //     longitude: coord[0],
+            //   }));
+            setRouteCoordinates(coords);
+            console.log('route coords:', routeCoordinates);
+          } catch (error) {
+            console.error('Error fetching directions:', error);
+          }
         }
-      }
+      }, 10000);
+      return () => clearInterval(interval);
     };
     fetchDirections();
   }, [marker1, marker2, routeCoordinates]);

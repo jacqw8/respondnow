@@ -16,7 +16,7 @@ import {NavigationProp, useNavigation} from '@react-navigation/native';
 import DispatcherMapScreen from './dispatcherscreens/DispatcherMapScreen';
 
 const InfoScreen: React.FC = () => {
-        const navigation = useNavigation<NavigationProp>();
+  const navigation = useNavigation<NavigationProp>();
   const [location, setLocation] = useState<any>(null);
   const [errorMsg, setErrorMsg] = useState('');
   const [callerLatitude, setCallerLatitude] = useState<any>(null);
@@ -74,7 +74,11 @@ const InfoScreen: React.FC = () => {
         // console.log('response lat:', response.data[0].lat);
         setCallerLatitude(response.data[0].lat);
         setCallerLongitude(response.data[0].lon);
-        return {lat: response.data[0].lat, lon: response.data[0].lon};
+        return {
+          lat: response.data[0].lat,
+          lon: response.data[0].lon,
+          address: response.data[0].display_name,
+        };
       } else {
         throw new Error('No results found');
       }
@@ -86,10 +90,11 @@ const InfoScreen: React.FC = () => {
 
   const sendToResponder = async () => {
     console.log('Sending to responder:', {callerLocation, symptoms, context});
-    const {lat, lon} = await addressToCoords(callerLocation);
-    console.log('Coordinates:', {lat, lon});
+    const {lat, lon, address} = await addressToCoords(callerLocation);
+    console.log('Coordinates:', {lat, lon, address});
     const userId = user.currentUser?.uid;
     await set(ref(db, `emergency/${userId}`), {
+      address: address,
       callerLatitude: lat,
       callerLongitude: lon,
       symptoms: symptoms,
