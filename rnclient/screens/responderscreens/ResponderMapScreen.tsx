@@ -1,4 +1,11 @@
-import {View, Text, StyleSheet, Alert} from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Alert,
+  TouchableOpacity,
+  ActivityIndicator,
+} from 'react-native';
 import React, {useState, useEffect, useRef} from 'react';
 import * as Location from 'expo-location';
 import MapView, {Marker, Polyline} from 'react-native-maps';
@@ -21,6 +28,13 @@ const ResponderMapScreen: React.FC = () => {
   const padding = 1.2;
   const user = getAuth();
   const [conditionsMet, setConditionsMet] = useState(false);
+  const [ignored, setIgnored] = useState(false);
+  const mapRef = useRef(null);
+  const [dispatcher, setDispatcher] = useState<any>(null);
+  const [alertShown, setAlertShown] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [noRoute, setNoRoute] = useState(false);
 
   useEffect(() => {
     if (marker1) {
@@ -43,10 +57,6 @@ const ResponderMapScreen: React.FC = () => {
           latitude: location.coords.latitude,
           longitude: location.coords.longitude,
         });
-        // setMarker2({
-        //   latitude: location.coords.latitude - 0.01,
-        //   longitude: location.coords.longitude - 0.01,
-        // });
 
         subscription = await Location.watchPositionAsync(
           {
@@ -76,8 +86,8 @@ const ResponderMapScreen: React.FC = () => {
 
   // get location of caller/patient - need to check if there is an emergency
   useEffect(() => {
-    const fetchResponderData = async () => {
-       // check responder data, if there is an emergency
+    const fetchEmergencyData = async () => {
+      // check responder data, if there is an emergency
       try {
         console.log('Attempting to access db');
         const responderRef = ref(db, `responders/${user.currentUser?.uid}`);
@@ -87,7 +97,35 @@ const ResponderMapScreen: React.FC = () => {
           console.log('Responder data:', data);
           if (data && 'isNearEmergency' in data) {
             if (data.isNearEmergency) {
-              Alert.alert('Emergency near', 'Action needed');
+              setDispatcher(data.dispatcherId);
+              console.log('dispatcher id', data.dispatcherId);
+              if (!alertShown) {
+                Alert.alert(
+                  'Emergency Alert',
+                  'There is an emergency near you. What would you like to do?',
+                  [
+                    {
+                      text: 'Ignore',
+                      onPress: () => {
+                        console.log('Ignore Pressed');
+                        setIgnored(true);
+                      },
+                      style: 'cancel',
+                    },
+                    {
+                      text: 'Respond',
+                      onPress: () => {
+                        console.log('Respond Pressed');
+                        setIgnored(false);
+                        setIsLoading(true);
+                        setLoadingMessage('Getting location of emergency...');
+                      },
+                    },
+                  ],
+                  {cancelable: false},
+                );
+                setAlertShown(true);
+              }
               clearInterval(interval);
             }
           }
@@ -95,34 +133,86 @@ const ResponderMapScreen: React.FC = () => {
       } catch (error) {
         console.log('Error getting responder database:', error);
       }
+      try {
+        const callerRef = ref(db, `emergency/${dispatcher}`);
+        const snapshot = await get(callerRef);
+        if (snapshot.exists()) {
+          const data = snapshot.val();
+          setMarker2({
+            latitude: parseFloat(data.callerLatitude),
+            longitude: parseFloat(data.callerLongitude),
+            description: 'Emergency at this location',
+          });
+        } else {
+          console.log('Caller data doesnt exist');
+        }
+      } catch (error) {
+        console.log('Error fetching caller data', error);
+      }
     };
     const interval = setInterval(() => {
-      fetchResponderData();
-    }, 10000); // Adjust interval time as needed
-  
-    // Clean up interval to avoid memory leaks
+      fetchEmergencyData();
+      setIsLoading(false);
+    }, 10000);
+
     return () => clearInterval(interval);
-    // const fetchCallerLocation = async () => {
-    //   try {
-    //     const callerRef = ref(db, `emergency/${user.currentUser?.uid}`);
-    //     const snapshot = await get(callerRef);
-    //     if (snapshot.exists()) {
-    //       const data = snapshot.val();
-    //       console.log('Caller data:', parseFloat(data.callerLatitude));
-    //       setCallerLocation(data);
-    //       setMarker2({
-    //         latitude: parseFloat(data.callerLatitude),
-    //         longitude: parseFloat(data.callerLongitude),
-    //       });
-    //     } else {
-    //       console.log('Caller data doesnt exist');
-    //     }
-    //   } catch (error) {
-    //     console.log('Error fetching caller data', error);
-    //   }
-    // };
-    // fetchCallerLocation();
-  }, [user]);
+  }, [alertShown, dispatcher, user]);
+
+  useEffect(() => {
+    const fetchDirections = async () => {
+      const interval = setInterval(async () => {
+        if (marker1 && marker2 && !noRoute) {
+          setIsLoading(true);
+          setLoadingMessage('Getting route coordinates...');
+          try {
+            console.log('getting route api');
+            const token =
+              '5b3ce3597851110001cf6248a9e9053d3f984724af7233d4c4c60f87';
+            const url = `https://api.openrouteservice.org/v2/directions/driving-car?api_key=${token}&start=${marker1.longitude},${marker1.latitude}&end=${marker2.longitude},${marker2.latitude}`;
+
+            console.log('url:', url);
+            const response = await axios.get(url);
+            const coords = response.data.features[0].geometry.coordinates;
+            //   const latlng = coords.map((coord: Number) => ({
+            //     latitude: coord[1],
+            //     longitude: coord[0],
+            //   }));
+            setRouteCoordinates(coords);
+            console.log('route coords:', routeCoordinates);
+            clearInterval(interval);
+            setIsLoading(false);
+            setNoRoute(true);
+          } catch (error) {
+            console.error('Error fetching directions:', error);
+          }
+        }
+      }, 15000);
+      return () => clearInterval(interval);
+    };
+    fetchDirections();
+  }, [marker1, marker2, routeCoordinates]);
+
+  const handleViewEmergency = () => {
+    setIgnored(false);
+    console.log('Viewing emergency:', marker2);
+    if (mapRef.current && marker2) {
+      mapRef.current.animateToRegion(
+        {
+          latitude: (marker1.latitude + marker2.latitude) / 2,
+          longitude: (marker1.longitude + marker2.longitude) / 2,
+          latitudeDelta: deltaLat + padding * deltaLat,
+          longitudeDelta: deltaLng + padding * deltaLng,
+        },
+        1000,
+      ); // Duration in milliseconds
+    }
+  };
+
+  useEffect(() => {
+    if (marker2 && !ignored) {
+      handleViewEmergency();
+    }
+  }, [marker2, ignored]);
 
   const sendLocToDb = async () => {
     if (!location || !user) {
@@ -202,37 +292,6 @@ const ResponderMapScreen: React.FC = () => {
     }
   }, [marker1, marker2]);
 
-  // useEffect(() => {
-  //   const fetchDirections = async () => {
-  //     //       console.log('marker1:', marker1);
-  //     //       console.log('marker2:', marker2);
-  //     if (marker1 && marker2) {
-  //       try {
-  //         console.log('getting route api');
-  //         const token =
-  //           '5b3ce3597851110001cf6248a9e9053d3f984724af7233d4c4c60f87';
-  //         const url = `https://api.openrouteservice.org/v2/directions/driving-car?api_key=${token}&start=${marker1.longitude},${marker1.latitude}&end=${marker2.longitude},${marker2.latitude}`;
-
-  //         console.log('url:', url);
-  //         const response = await axios.get(url);
-  //         const coords = response.data.features[0].geometry.coordinates;
-  //         //   const latlng = coords.map((coord: Number) => ({
-  //         //     latitude: coord[1],
-  //         //     longitude: coord[0],
-  //         //   }));
-  //         setRouteCoordinates(coords);
-  //         console.log('route coords:', routeCoordinates);
-  //       } catch (error) {
-  //         console.error('Error fetching directions:', error);
-  //       }
-  //     }
-  //   };
-  //   const interval = setInterval(() => {
-  //     fetchDirections();
-  //   }, 15000);
-
-  // }, [marker1, marker2, routeCoordinates]);
-
   if (!location) {
     return (
       <View style={styles.container}>
@@ -246,12 +305,13 @@ const ResponderMapScreen: React.FC = () => {
       <Text>Dispatcher Screen</Text>
       {conditionsMet && (
         <MapView
+          ref={mapRef}
           style={styles.map}
           initialRegion={{
-            latitude: marker1 ? marker1.latitude : 0,
-            longitude: marker1 ? marker1.longitude : 0,
-            latitudeDelta: 0.05,
-            longitudeDelta: 0.05,
+            latitude: marker1.latitude,
+            longitude: marker1.longitude,
+            latitudeDelta: 0.02,
+            longitudeDelta: 0.02,
           }}>
           {/* Dispatcher marker */}
           {marker1 && (
@@ -266,30 +326,44 @@ const ResponderMapScreen: React.FC = () => {
             />
           )}
           {/* Caller marker */}
-          {marker2 && (
+          {marker2 && !ignored && (
             <Marker
-              draggable
               coordinate={{
                 latitude: marker2.latitude,
                 longitude: marker2.longitude,
               }}
-              title="Caller"
-              description="This is the caller's current location"
+              title="Emergency"
+              description={marker2.description}
               image={require('../../imgs/caller1.png')}
             />
           )}
           {/* Render route */}
 
-          {/* <Polyline
-              coordinates={routeCoordinates.map(c => ({
-                latitude: c[1],
-                longitude: c[0],
-              }))}
-              strokeColor="#FF0000"
-              strokeWidth={3}
-            /> */}
+          <Polyline
+            coordinates={routeCoordinates.map(c => ({
+              latitude: c[1],
+              longitude: c[0],
+            }))}
+            strokeColor="#FF0000"
+            strokeWidth={3}
+          />
         </MapView>
       )}
+      {isLoading && (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#0000ff" />
+          <Text style={styles.loadingText}>{loadingMessage}</Text>
+        </View>
+      )}
+      {/* {ignored && (
+        <View style={{marginTop: 10}}>
+          <TouchableOpacity
+            title="View Emergency"
+            onPress={handleViewEmergency}>
+            <Text>View Emergency</Text>
+          </TouchableOpacity>
+        </View>
+      )} */}
     </View>
   );
 };
@@ -304,6 +378,27 @@ const styles = StyleSheet.create({
   map: {
     ...StyleSheet.absoluteFillObject,
   },
+  loadingContainer: {
+    position: 'absolute',
+    top: '50%',
+    left: '32%',
+    transform: [{translateX: -50}, {translateY: -50}],
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    padding: 10,
+    borderRadius: 10,
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
 });
 
 export default ResponderMapScreen;
+
+// To-do:
+// show caller location on map
+// respond to emergency -
+// keep checking distance - if distance is too far, update the backend
