@@ -23,12 +23,13 @@ const DispatcherMapScreen: React.FC = () => {
   const [callerLocation, setCallerLocation] = useState(null);
   const user = getAuth();
   const [conditionsMet, setConditionsMet] = useState(false);
+  const mapRef = useRef(null);
 
   useEffect(() => {
-    if (marker1 && marker2 && deltaLat !== null && deltaLng !== null) {
+    if (marker1) {
       setConditionsMet(true);
     }
-  }, [marker1, marker2, deltaLat, deltaLng]);
+  }, [marker1]);
 
   // Calculate distance between markers
   const calculateDistance = (
@@ -83,6 +84,20 @@ const DispatcherMapScreen: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    if (mapRef.current && marker2) {
+      mapRef.current.animateToRegion(
+        {
+          latitude: (marker1.latitude + marker2.latitude) / 2,
+          longitude: (marker1.longitude + marker2.longitude) / 2,
+          latitudeDelta: deltaLat + padding * deltaLat,
+          longitudeDelta: deltaLng + padding * deltaLng,
+        },
+        1000,
+      ); // Duration in milliseconds
+    }
+  }, [deltaLat, deltaLng, marker1, marker2]);
+
+  useEffect(() => {
     const interval = setInterval(() => {
       // get responders
       const respondersRef = ref(db, 'responders');
@@ -102,7 +117,9 @@ const DispatcherMapScreen: React.FC = () => {
       filteredResponders.forEach(responder => {
         // Make sure to change this back after emergency is done
         updates[`responders/${responder.userId}/isNearEmergency`] = true;
-        updates[`responders/${responder.userId}/dispatcherId`] = `${user.currentUser?.uid}`;
+        updates[
+          `responders/${responder.userId}/dispatcherId`
+        ] = `${user.currentUser?.uid}`;
       });
 
       try {
@@ -136,7 +153,7 @@ const DispatcherMapScreen: React.FC = () => {
       }
     };
     // Interval for subsequent executions
-  const interval = setInterval(filterAndSetResponders, 10000);
+    const interval = setInterval(filterAndSetResponders, 10000);
     return () => clearInterval(interval);
   }, [responderLocations, marker2, distance, calculateDistance]);
 
@@ -246,22 +263,15 @@ const DispatcherMapScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      {conditionsMet ? (
+      {conditionsMet && (
         <MapView
+          ref={mapRef}
           style={styles.map}
           initialRegion={{
-            latitude:
-              marker1 && marker2
-                ? (marker1.latitude + marker2.latitude) / 2
-                : 0,
-            longitude:
-              marker1 && marker2
-                ? (marker1.longitude + marker2.longitude) / 2
-                : 0,
-            latitudeDelta:
-              marker1 && marker2 ? deltaLat + padding * deltaLat : 0,
-            longitudeDelta:
-              marker1 && marker2 ? deltaLng + padding * deltaLng : 0,
+            latitude: marker1.latitude,
+            longitude: marker1.longitude,
+            latitudeDelta: 0.03,
+            longitudeDelta: 0.03,
           }}>
           {/* Dispatcher marker */}
           {marker1 && (
@@ -322,25 +332,6 @@ const DispatcherMapScreen: React.FC = () => {
             />
           )}
         </MapView>
-      ) : (
-        <MapView
-          style={styles.map}
-          initialRegion={{
-            latitude: marker1 ? marker1.latitude : 37.78825,
-            longitude: marker1 ? marker1.longitude : -122.4324,
-            latitudeDelta: 0.05,
-            longitudeDelta: 0.05,
-          }}>
-          <Marker
-            coordinate={{
-              latitude: marker1 ? marker1.latitude : 37.78825,
-              longitude: marker1 ? marker1.longitude : -122.4324,
-            }}
-            title={`Dispatcher ${user.currentUser?.displayName}`}
-            description="This is your current location"
-            image={require('../../imgs/emt1.png')}
-          />
-        </MapView>
       )}
     </View>
   );
@@ -359,7 +350,3 @@ const styles = StyleSheet.create({
 });
 
 export default DispatcherMapScreen;
-
-// To-do:
-// Change icons
-// Set up backend and pull responder markers into this map

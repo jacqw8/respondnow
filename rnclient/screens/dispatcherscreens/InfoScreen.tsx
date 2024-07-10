@@ -168,5 +168,4 @@ const styles = StyleSheet.create({
 export default InfoScreen;
 
 // To-do:
-// all responders in a certain location (within the radius) will receive it
 // Be able to message the responders
