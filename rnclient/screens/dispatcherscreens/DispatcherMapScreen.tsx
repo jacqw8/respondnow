@@ -5,7 +5,7 @@ import MapView, {Marker, Circle, Polyline} from 'react-native-maps';
 import polyline from '@mapbox/polyline';
 import axios from 'axios';
 import {db} from '../../firebase';
-import {ref, onValue, get} from 'firebase/database';
+import {ref, onValue, get, update} from 'firebase/database';
 import {getAuth} from 'firebase/auth';
 
 const DispatcherMapScreen: React.FC = () => {
@@ -25,16 +25,10 @@ const DispatcherMapScreen: React.FC = () => {
   const [conditionsMet, setConditionsMet] = useState(false);
 
   useEffect(() => {
-    if (
-      marker1 &&
-      marker2 &&
-      deltaLat !== null &&
-      deltaLng !== null &&
-      routeCoordinates.length > 0
-    ) {
+    if (marker1 && marker2 && deltaLat !== null && deltaLng !== null) {
       setConditionsMet(true);
     }
-  }, [marker1, marker2, deltaLat, deltaLng, routeCoordinates]);
+  }, [marker1, marker2, deltaLat, deltaLng]);
 
   // Calculate distance between markers
   const calculateDistance = (
@@ -90,6 +84,7 @@ const DispatcherMapScreen: React.FC = () => {
 
   useEffect(() => {
     const interval = setInterval(() => {
+      // get responders
       const respondersRef = ref(db, 'responders');
       onValue(respondersRef, snapshot => {
         const data = snapshot.val();
@@ -102,7 +97,22 @@ const DispatcherMapScreen: React.FC = () => {
   });
 
   useEffect(() => {
-    const interval = setInterval(() => {
+    const updateFilteredResponders = async filteredResponders => {
+      const updates = {};
+      filteredResponders.forEach(responder => {
+        // Make sure to change this back after emergency is done
+        updates[`responders/${responder.userId}/isNearEmergency`] = true;
+        updates[`responders/${responder.userId}/dispatcherId`] = `${user.currentUser?.uid}`;
+      });
+
+      try {
+        await update(ref(db), updates);
+        console.log('Filtered responders updated successfully.');
+      } catch (error) {
+        console.error('Error updating filtered responders:', error);
+      }
+    };
+    const filterAndSetResponders = () => {
       if (responderLocations.length > 0) {
         const filtered = responderLocations.filter(loc => {
           // calculate distance of responder to patient
@@ -112,15 +122,21 @@ const DispatcherMapScreen: React.FC = () => {
             loc.latitude,
             loc.longitude,
           );
-          console.log('name', loc.name);
-          console.log('dist', dist);
+          console.log('name:', loc.name);
+          console.log('uid:', loc.userId);
+          console.log('dist:', dist);
           console.log('my distance', distance);
           return dist <= distance;
         });
         setFilteredResponders(filtered);
         console.log('filtered responders', filtered);
+        // Update database with filtered responders
+        updateFilteredResponders(filtered);
+        clearInterval(interval);
       }
-    }, 10000);
+    };
+    // Interval for subsequent executions
+  const interval = setInterval(filterAndSetResponders, 10000);
     return () => clearInterval(interval);
   }, [responderLocations, marker2, distance, calculateDistance]);
 
@@ -209,11 +225,12 @@ const DispatcherMapScreen: React.FC = () => {
             //   }));
             setRouteCoordinates(coords);
             console.log('route coords:', routeCoordinates);
+            clearInterval(interval);
           } catch (error) {
             console.error('Error fetching directions:', error);
           }
         }
-      }, 10000);
+      }, 15000);
       return () => clearInterval(interval);
     };
     fetchDirections();

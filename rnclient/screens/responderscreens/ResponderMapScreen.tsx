@@ -1,4 +1,4 @@
-import {View, Text, StyleSheet} from 'react-native';
+import {View, Text, StyleSheet, Alert} from 'react-native';
 import React, {useState, useEffect, useRef} from 'react';
 import * as Location from 'expo-location';
 import MapView, {Marker, Polyline} from 'react-native-maps';
@@ -20,6 +20,13 @@ const ResponderMapScreen: React.FC = () => {
   const [deltaLng, setDeltaLng] = useState<any>(null);
   const padding = 1.2;
   const user = getAuth();
+  const [conditionsMet, setConditionsMet] = useState(false);
+
+  useEffect(() => {
+    if (marker1) {
+      setConditionsMet(true);
+    }
+  }, [marker1]);
 
   useEffect(() => {
     let subscription: Location.LocationSubscription | null = null;
@@ -66,6 +73,56 @@ const ResponderMapScreen: React.FC = () => {
       }
     };
   }, []);
+
+  // get location of caller/patient - need to check if there is an emergency
+  useEffect(() => {
+    const fetchResponderData = async () => {
+       // check responder data, if there is an emergency
+      try {
+        console.log('Attempting to access db');
+        const responderRef = ref(db, `responders/${user.currentUser?.uid}`);
+        const snapshot = await get(responderRef);
+        if (snapshot.exists()) {
+          const data = snapshot.val();
+          console.log('Responder data:', data);
+          if (data && 'isNearEmergency' in data) {
+            if (data.isNearEmergency) {
+              Alert.alert('Emergency near', 'Action needed');
+              clearInterval(interval);
+            }
+          }
+        }
+      } catch (error) {
+        console.log('Error getting responder database:', error);
+      }
+    };
+    const interval = setInterval(() => {
+      fetchResponderData();
+    }, 10000); // Adjust interval time as needed
+  
+    // Clean up interval to avoid memory leaks
+    return () => clearInterval(interval);
+    // const fetchCallerLocation = async () => {
+    //   try {
+    //     const callerRef = ref(db, `emergency/${user.currentUser?.uid}`);
+    //     const snapshot = await get(callerRef);
+    //     if (snapshot.exists()) {
+    //       const data = snapshot.val();
+    //       console.log('Caller data:', parseFloat(data.callerLatitude));
+    //       setCallerLocation(data);
+    //       setMarker2({
+    //         latitude: parseFloat(data.callerLatitude),
+    //         longitude: parseFloat(data.callerLongitude),
+    //       });
+    //     } else {
+    //       console.log('Caller data doesnt exist');
+    //     }
+    //   } catch (error) {
+    //     console.log('Error fetching caller data', error);
+    //   }
+    // };
+    // fetchCallerLocation();
+  }, [user]);
 
   const sendLocToDb = async () => {
     if (!location || !user) {
@@ -187,52 +244,43 @@ const ResponderMapScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <Text>Dispatcher Screen</Text>
-      {marker1 &&
-        marker2 &&
-        deltaLat !== null &&
-        deltaLng !== null && (
-          <MapView
-            style={styles.map}
-            initialRegion={{
-              latitude:
-                marker1 && marker2
-                  ? (marker1.latitude + marker2.latitude) / 2
-                  : 0,
-              longitude:
-                marker1 && marker2
-                  ? (marker1.longitude + marker2.longitude) / 2
-                  : 0,
-              latitudeDelta:
-                marker1 && marker2 ? deltaLat + padding * deltaLat : 0,
-              longitudeDelta:
-                marker1 && marker2 ? deltaLng + padding * deltaLng : 0,
-            }}>
-            {/* Dispatcher marker */}
-            {marker1 && (
-              <Marker
-                coordinate={{
-                  latitude: marker1.latitude,
-                  longitude: marker1.longitude,
-                }}
-                title="Responder"
-                description="This is your current location"
-              />
-            )}
-            {/* Caller marker */}
-            {marker2 && (
-              <Marker
-                draggable
-                coordinate={{
-                  latitude: marker2.latitude,
-                  longitude: marker2.longitude,
-                }}
-                title="Caller"
-                description="This is the caller's current location"
-              />
-            )}
-            {/* Render route */}
+      {conditionsMet && (
+        <MapView
+          style={styles.map}
+          initialRegion={{
+            latitude: marker1 ? marker1.latitude : 0,
+            longitude: marker1 ? marker1.longitude : 0,
+            latitudeDelta: 0.05,
+            longitudeDelta: 0.05,
+          }}>
+          {/* Dispatcher marker */}
+          {marker1 && (
+            <Marker
+              coordinate={{
+                latitude: marker1.latitude,
+                longitude: marker1.longitude,
+              }}
+              title={`Responder ${user.currentUser?.displayName}`}
+              description="This is your current location"
+              image={require('../../imgs/responder1.png')}
+            />
+          )}
+          {/* Caller marker */}
+          {marker2 && (
+            <Marker
+              draggable
+              coordinate={{
+                latitude: marker2.latitude,
+                longitude: marker2.longitude,
+              }}
+              title="Caller"
+              description="This is the caller's current location"
+              image={require('../../imgs/caller1.png')}
+            />
+          )}
+          {/* Render route */}
 
-            {/* <Polyline
+          {/* <Polyline
               coordinates={routeCoordinates.map(c => ({
                 latitude: c[1],
                 longitude: c[0],
@@ -240,8 +288,8 @@ const ResponderMapScreen: React.FC = () => {
               strokeColor="#FF0000"
               strokeWidth={3}
             /> */}
-          </MapView>
-        )}
+        </MapView>
+      )}
     </View>
   );
 };
