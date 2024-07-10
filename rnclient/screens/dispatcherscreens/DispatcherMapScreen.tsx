@@ -9,6 +9,7 @@ import {ref, onValue, get} from 'firebase/database';
 import {getAuth} from 'firebase/auth';
 
 const DispatcherMapScreen: React.FC = () => {
+
   const [location, setLocation] = useState<any>(null);
   const [errorMsg, setErrorMsg] = useState('');
   const [routeCoordinates, setRouteCoordinates] = useState([]);
@@ -22,6 +23,19 @@ const DispatcherMapScreen: React.FC = () => {
   const [filteredResponders, setFilteredResponders] = useState([]);
   const [callerLocation, setCallerLocation] = useState(null);
   const user = getAuth();
+  const [conditionsMet, setConditionsMet] = useState(false);
+
+  useEffect(() => {
+    if (
+      marker1 &&
+      marker2 &&
+      deltaLat !== null &&
+      deltaLng !== null &&
+      routeCoordinates.length > 0
+    ) {
+      setConditionsMet(true);
+    }
+  }, [marker1, marker2, deltaLat, deltaLng, routeCoordinates]);
 
   // Calculate distance between markers
   const calculateDistance = (
@@ -83,7 +97,7 @@ const DispatcherMapScreen: React.FC = () => {
         const locations = data ? Object.values(data) : [];
         setResponderLocations(locations);
       });
-      console.log('responders', responderLocations);
+      console.log('responders:', responderLocations);
     }, 10000);
     return () => clearInterval(interval);
   });
@@ -92,20 +106,24 @@ const DispatcherMapScreen: React.FC = () => {
     const interval = setInterval(() => {
       if (responderLocations.length > 0) {
         const filtered = responderLocations.filter(loc => {
+          // calculate distance of responder to patient
           const dist = calculateDistance(
-            location.coords.latitude,
-            location.coords.longitude,
+            marker2.latitude,
+            marker2.longitude,
             loc.latitude,
             loc.longitude,
           );
-          return dist;
+          console.log('name', loc.name);
+          console.log('dist', dist);
+          console.log('my distance', distance);
+          return dist <= distance;
         });
         setFilteredResponders(filtered);
         console.log('filtered responders', filtered);
       }
     }, 10000);
     return () => clearInterval(interval);
-  }, [responderLocations, location]);
+  }, [responderLocations, marker2, distance, calculateDistance]);
 
   useEffect(() => {
     let subscription: Location.LocationSubscription | null = null;
@@ -211,11 +229,7 @@ const DispatcherMapScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      {marker1 &&
-      marker2 &&
-      deltaLat !== null &&
-      deltaLng !== null &&
-      routeCoordinates.length > 0 ? (
+      {conditionsMet ? (
         <MapView
           style={styles.map}
           initialRegion={{
@@ -301,14 +315,14 @@ const DispatcherMapScreen: React.FC = () => {
             longitudeDelta: 0.05,
           }}>
           <Marker
-              coordinate={{
-                latitude: marker1 ? marker1.latitude : 37.78825,
-                longitude: marker1 ? marker1.longitude : -122.4324,
-              }}
-              title={`Dispatcher ${user.currentUser?.displayName}`}
-              description="This is your current location"
-              image={require('../../imgs/emt1.png')}
-            />
+            coordinate={{
+              latitude: marker1 ? marker1.latitude : 37.78825,
+              longitude: marker1 ? marker1.longitude : -122.4324,
+            }}
+            title={`Dispatcher ${user.currentUser?.displayName}`}
+            description="This is your current location"
+            image={require('../../imgs/emt1.png')}
+          />
         </MapView>
       )}
     </View>

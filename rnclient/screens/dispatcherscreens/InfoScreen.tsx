@@ -11,8 +11,12 @@ import axios from 'axios';
 import {db} from '../../firebase';
 import {ref, set} from 'firebase/database';
 import {getAuth} from 'firebase/auth';
+import {NavigationProp, useNavigation} from '@react-navigation/native';
+
+import DispatcherMapScreen from './dispatcherscreens/DispatcherMapScreen';
 
 const InfoScreen: React.FC = () => {
+        const navigation = useNavigation<NavigationProp>();
   const [location, setLocation] = useState<any>(null);
   const [errorMsg, setErrorMsg] = useState('');
   const [callerLatitude, setCallerLatitude] = useState<any>(null);
@@ -91,6 +95,7 @@ const InfoScreen: React.FC = () => {
       symptoms: symptoms,
       context: context,
     });
+    navigation.navigate('Map');
     console.log('updated emergency to db');
   };
 
