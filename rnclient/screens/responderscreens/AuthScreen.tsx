@@ -29,7 +29,9 @@ const AuthScreen: React.FC = () => {
         const subscriber = onAuthStateChanged(auth, (user) => {
           if (user) {
             setUser(user);
-            console.log('User is signed in: ', user);
+            console.log('User is signed in:', user);
+            setName(user.displayName);
+            console.log('name is', user.displayName);
           } else {
             setUser(null);
             console.log('No user is signed in.');
@@ -56,6 +58,7 @@ const AuthScreen: React.FC = () => {
         email: email,
         role: 'responder',
       });
+      setName(name);
     } catch (error) {
       setError(error.message);
       Alert.alert('Error', errorMsg);
@@ -97,6 +100,7 @@ const AuthScreen: React.FC = () => {
       );
       setUser(userCredential.user);
       console.log('signed in', userCredential.user);
+      setName(userCredential.user.displayName);
     } catch (error) {
       setUser(null);
       setError(error.message);
@@ -118,7 +122,7 @@ const AuthScreen: React.FC = () => {
     <View style={styles.container}>
       {user ? (
         <View>
-          <Text>Welcome!</Text>
+          <Text>Welcome {name}!</Text>
           <TouchableOpacity
             style={styles.button}
             title="Sign Out"

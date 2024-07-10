@@ -5,7 +5,8 @@ import MapView, {Marker, Circle, Polyline} from 'react-native-maps';
 import polyline from '@mapbox/polyline';
 import axios from 'axios';
 import {db} from '../../firebase';
-import {ref, onValue} from 'firebase/database';
+import {ref, onValue, get} from 'firebase/database';
+import {getAuth} from 'firebase/auth';
 
 const DispatcherMapScreen: React.FC = () => {
   const [location, setLocation] = useState<any>(null);
@@ -19,6 +20,8 @@ const DispatcherMapScreen: React.FC = () => {
   const padding = 1.2;
   const [responderLocations, setResponderLocations] = useState([]);
   const [filteredResponders, setFilteredResponders] = useState([]);
+  const [callerLocation, setCallerLocation] = useState(null);
+  const user = getAuth();
 
   // Calculate distance between markers
   const calculateDistance = (
@@ -47,6 +50,30 @@ const DispatcherMapScreen: React.FC = () => {
   const deg2rad = (deg: number) => {
     return deg * (Math.PI / 180);
   };
+
+  // get location of caller/patient
+  useEffect(() => {
+    const fetchCallerLocation = async () => {
+      try {
+        const callerRef = ref(db, `emergency/${user.currentUser?.uid}`);
+        const snapshot = await get(callerRef);
+        if (snapshot.exists()) {
+          const data = snapshot.val();
+          console.log('Caller data:', parseFloat(data.callerLatitude));
+          setCallerLocation(data);
+          setMarker2({
+            latitude: parseFloat(data.callerLatitude),
+            longitude: parseFloat(data.callerLongitude),
+          });
+        } else {
+          console.log('Caller data doesnt exist');
+        }
+      } catch (error) {
+        console.log('Error fetching caller data', error);
+      }
+    };
+    fetchCallerLocation();
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -94,10 +121,6 @@ const DispatcherMapScreen: React.FC = () => {
         setMarker1({
           latitude: location.coords.latitude,
           longitude: location.coords.longitude,
-        });
-        setMarker2({
-          latitude: location.coords.latitude - 0.01,
-          longitude: location.coords.longitude - 0.01,
         });
 
         subscription = await Location.watchPositionAsync(
@@ -188,85 +211,106 @@ const DispatcherMapScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <Text>Dispatcher Screen</Text>
       {marker1 &&
-        marker2 &&
-        deltaLat !== null &&
-        deltaLng !== null &&
-        routeCoordinates.length > 0 && (
-          <MapView
-            style={styles.map}
-            initialRegion={{
-              latitude:
-                marker1 && marker2
-                  ? (marker1.latitude + marker2.latitude) / 2
-                  : 0,
-              longitude:
-                marker1 && marker2
-                  ? (marker1.longitude + marker2.longitude) / 2
-                  : 0,
-              latitudeDelta:
-                marker1 && marker2 ? deltaLat + padding * deltaLat : 0,
-              longitudeDelta:
-                marker1 && marker2 ? deltaLng + padding * deltaLng : 0,
-            }}>
-            {/* Dispatcher marker */}
-            {marker1 && (
-              <Marker
-                coordinate={{
-                  latitude: marker1.latitude,
-                  longitude: marker1.longitude,
-                }}
-                title="Dispatcher"
-                description="This is your current location"
-              />
-            )}
-            {/* Responder markers */}
-            {responderLocations.map((location, index) => (
-              <Marker
-                key={index}
-                coordinate={{
-                  latitude: location.latitude,
-                  longitude: location.longitude,
-                }}
-                title={`Responder ${index + 1}`}
-                description="Responder location"
-              />
-            ))}
-            {/* Caller marker */}
-            {marker2 && (
-              <Marker
-                draggable
-                coordinate={{
-                  latitude: marker2.latitude,
-                  longitude: marker2.longitude,
-                }}
-                title="Caller"
-                description="This is the caller's current location"
-              />
-            )}
-            {/* Render route */}
-
-            <Polyline
-              coordinates={routeCoordinates.map(c => ({
-                latitude: c[1],
-                longitude: c[0],
-              }))}
-              strokeColor="#FF0000"
-              strokeWidth={3}
+      marker2 &&
+      deltaLat !== null &&
+      deltaLng !== null &&
+      routeCoordinates.length > 0 ? (
+        <MapView
+          style={styles.map}
+          initialRegion={{
+            latitude:
+              marker1 && marker2
+                ? (marker1.latitude + marker2.latitude) / 2
+                : 0,
+            longitude:
+              marker1 && marker2
+                ? (marker1.longitude + marker2.longitude) / 2
+                : 0,
+            latitudeDelta:
+              marker1 && marker2 ? deltaLat + padding * deltaLat : 0,
+            longitudeDelta:
+              marker1 && marker2 ? deltaLng + padding * deltaLng : 0,
+          }}>
+          {/* Dispatcher marker */}
+          {marker1 && (
+            <Marker
+              coordinate={{
+                latitude: marker1.latitude,
+                longitude: marker1.longitude,
+              }}
+              title={`Dispatcher ${user.currentUser?.displayName}`}
+              description="This is your current location"
+              image={require('../../imgs/emt.png')}
             />
+          )}
+          {/* Responder markers */}
+          {filteredResponders.map((responder, index) => (
+            <Marker
+              key={index}
+              coordinate={{
+                latitude: responder.latitude,
+                longitude: responder.longitude,
+              }}
+              title={`Responder ${responder.name}`}
+              description="Responder location"
+              image={require('../../imgs/responder1.png')}
+            />
+          ))}
+          {/* Caller marker */}
+          {marker2 && (
+            <Marker
+              draggable
+              coordinate={{
+                latitude: marker2.latitude,
+                longitude: marker2.longitude,
+              }}
+              title="Caller"
+              description="This is the caller's current location"
+              image={require('../../imgs/caller1.png')}
+            />
+          )}
+          {/* Render route */}
 
-            {/* Circle around the caller marker */}
-            {marker2 && (
-              <Circle
-                center={marker2}
-                radius={distance * 1000} // in meters
-                fillColor="rgba(238, 67, 110, 0.48)"
-                strokeColor="rgba(227, 49, 58, 0.8)"
-              />
-            )}
-          </MapView>
-        )}
+          <Polyline
+            coordinates={routeCoordinates.map(c => ({
+              latitude: c[1],
+              longitude: c[0],
+            }))}
+            strokeColor="#FF0000"
+            strokeWidth={3}
+          />
+
+          {/* Circle around the caller marker */}
+          {marker2 && (
+            <Circle
+              center={marker2}
+              radius={distance * 1000} // in meters
+              fillColor="rgba(238, 67, 110, 0.48)"
+              strokeColor="rgba(227, 49, 58, 0.8)"
+            />
+          )}
+        </MapView>
+      ) : (
+        <MapView
+          style={styles.map}
+          initialRegion={{
+            latitude: marker1 ? marker1.latitude : 37.78825,
+            longitude: marker1 ? marker1.longitude : -122.4324,
+            latitudeDelta: 0.05,
+            longitudeDelta: 0.05,
+          }}>
+          <Marker
+              coordinate={{
+                latitude: marker1 ? marker1.latitude : 37.78825,
+                longitude: marker1 ? marker1.longitude : -122.4324,
+              }}
+              title={`Dispatcher ${user.currentUser?.displayName}`}
+              description="This is your current location"
+              image={require('../../imgs/emt1.png')}
+            />
+        </MapView>
+      )}
     </View>
   );
 };

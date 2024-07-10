@@ -5,8 +5,9 @@ import MapView, {Marker, Polyline} from 'react-native-maps';
 import polyline from '@mapbox/polyline';
 import axios from 'axios';
 import {db} from '../../firebase';
-import {ref, update} from 'firebase/database';
+import {ref, update, get} from 'firebase/database';
 import {getAuth} from 'firebase/auth';
+import messaging from 'firebase/messaging';
 
 const ResponderMapScreen: React.FC = () => {
   const [location, setLocation] = useState<any>(null);
@@ -35,10 +36,10 @@ const ResponderMapScreen: React.FC = () => {
           latitude: location.coords.latitude,
           longitude: location.coords.longitude,
         });
-        setMarker2({
-          latitude: location.coords.latitude - 0.01,
-          longitude: location.coords.longitude - 0.01,
-        });
+        // setMarker2({
+        //   latitude: location.coords.latitude - 0.01,
+        //   longitude: location.coords.longitude - 0.01,
+        // });
 
         subscription = await Location.watchPositionAsync(
           {

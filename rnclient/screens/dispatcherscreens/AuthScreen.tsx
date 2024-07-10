@@ -30,6 +30,8 @@ const AuthScreen: React.FC = () => {
           if (user) {
             setUser(user);
             console.log('User is signed in: ', user);
+            setName(user.displayName);
+            console.log('name is', user.displayName);
           } else {
             setUser(null);
             console.log('No user is signed in.');
@@ -56,6 +58,7 @@ const AuthScreen: React.FC = () => {
         email: email,
         role: 'dispatcher',
       });
+      setName(user.displayName);
     } catch (error) {
       setError(error.message);
       Alert.alert('Error', errorMsg);
@@ -97,6 +100,7 @@ const AuthScreen: React.FC = () => {
       );
       setUser(userCredential.user);
       console.log('signed in');
+      setName(user.displayName);
     } catch (error) {
       setUser(null);
       setError(error.message);
@@ -118,7 +122,7 @@ const AuthScreen: React.FC = () => {
     <View style={styles.container}>
       {user ? (
         <View>
-          <Text>Welcome!</Text>
+          <Text>Welcome {name}!</Text>
           <Button title="Sign Out" onPress={handleSignOut} />
         </View>
       ) : (
