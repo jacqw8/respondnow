@@ -112,7 +112,7 @@ const AuthScreen: React.FC = () => {
     } catch (error) {
       setUser(null);
       setError(error.message);
-      Alert.alert('Error', errorMsg);
+      Alert.alert('Error', error.message);
     }
   };
 

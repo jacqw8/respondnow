@@ -107,11 +107,12 @@ const AuthScreen: React.FC = () => {
       );
       setUser(userCredential.user);
       console.log('signed in');
-      setName(user.displayName);
+      setName(userCredential.user.displayName);
     } catch (error) {
       setUser(null);
       setError(error.message);
-      Alert.alert('Error', errorMsg);
+      console.log('error signing in:', error.message);
+      Alert.alert('Error', error.message);
     }
   };
 
