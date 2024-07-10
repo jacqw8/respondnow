@@ -26,19 +26,26 @@ const AuthScreen: React.FC = () => {
   const [errorMsg, setError] = useState('');
 
   useEffect(() => {
-        const subscriber = onAuthStateChanged(auth, (user) => {
-          if (user) {
-            setUser(user);
-            console.log('User is signed in: ', user);
-            setName(user.displayName);
-            console.log('name is', user.displayName);
-          } else {
-            setUser(null);
-            console.log('No user is signed in.');
-          }
-        });
-        return subscriber; // unsubscribe on unmount
-      }, []);
+    const subscriber = onAuthStateChanged(auth, async user => {
+      if (user) {
+        console.log('checking if correct group');
+        const isDispatcher = await isDispatcherEmail(user.email);
+        if (!isDispatcher) {
+          console.log('incorrect group');
+          handleSignOut();
+          return;
+        }
+        setUser(user);
+        console.log('User is signed in: ', user);
+        setName(user.displayName);
+        console.log('name is', user.displayName);
+      } else {
+        setUser(null);
+        console.log('No user is signed in.');
+      }
+    });
+    return subscriber; // unsubscribe on unmount
+  }, []);
 
   const handleSignUp = async () => {
     try {

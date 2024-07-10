@@ -7,8 +7,9 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
-import {auth} from '../firebase';
-import {onAuthStateChanged} from 'firebase/auth';
+import {auth, db} from '../firebase';
+import {onAuthStateChanged, signOut} from 'firebase/auth';
+import {ref, get} from 'firebase/database';
 
 // Screens
 import ResponderInfoScreen from './responderscreens/ResponderInfoScreen';
@@ -24,12 +25,37 @@ const ResponderScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, user => {
+    const unsubscribe = onAuthStateChanged(auth, async user => {
       setIsLoggedIn(!!user);
     });
 
     return () => unsubscribe();
   }, []);
+
+  // Function to check if the email belongs to a responder
+  const isResponderEmail = async (email) => {
+    try {
+      // Check if the email belongs to a responder
+      const dbRef = ref(db, 'responders');
+      const snapshot = await get(dbRef);
+
+      if (snapshot.exists()) {
+        // Iterate through snapshot to check if email exists in responders
+        const responders = snapshot.val();
+        const responderEmails = Object.values(responders).map(
+          responder => responder.email,
+        );
+
+        return responderEmails.includes(email);
+      } else {
+        console.log('No responders found in database');
+        return false;
+      }
+    } catch (error) {
+      console.error('Error checking user role:', error.message);
+      return false;
+    }
+  };
 
   if (!isLoggedIn) {
     return (

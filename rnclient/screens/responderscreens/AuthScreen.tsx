@@ -26,19 +26,26 @@ const AuthScreen: React.FC = () => {
   const [errorMsg, setError] = useState('');
 
   useEffect(() => {
-        const subscriber = onAuthStateChanged(auth, (user) => {
-          if (user) {
-            setUser(user);
-            console.log('User is signed in:', user);
-            setName(user.displayName);
-            console.log('name is', user.displayName);
-          } else {
-            setUser(null);
-            console.log('No user is signed in.');
-          }
-        });
-        return subscriber; // unsubscribe on unmount
-      }, []);
+    const subscriber = onAuthStateChanged(auth, async user => {
+      if (user) {
+        console.log('checking if correct group');
+        const isResponder = await isResponderEmail(user.email);
+        if (!isResponder) {
+          console.log('incorrect group');
+          handleSignOut();
+          return;
+        }
+        setUser(user);
+        console.log('User is signed in:', user);
+        setName(user.displayName);
+        console.log('name is', user.displayName);
+      } else {
+        setUser(null);
+        console.log('No user is signed in.');
+      }
+    });
+    return subscriber; // unsubscribe on unmount
+  }, []);
 
   const handleSignUp = async () => {
     try {
@@ -71,14 +78,15 @@ const AuthScreen: React.FC = () => {
       // Check if the email belongs to a responder
       const dbRef = ref(db, 'responders');
       const snapshot = await get(dbRef);
-
+      console.log('snapshot:', snapshot);
+      console.log('my email:', email);
       if (snapshot.exists()) {
         // Iterate through snapshot to check if email exists in responders
         const responders = snapshot.val();
         const responderEmails = Object.values(responders).map(
           responder => responder.email,
         );
-
+        console.log(responderEmails.includes(email));
         return responderEmails.includes(email);
       } else {
         console.log('No responders found in database');
