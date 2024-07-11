@@ -235,7 +235,7 @@ const ResponderMapScreen: React.FC = () => {
     return () => clearInterval(interval);
   }, [alertShown, dispatcherId, user]);
 
-  // useEffect(() => {
+  useEffect(() => {
     const fetchDirections = async () => {
       const interval = setInterval(async () => {
         if (marker1 && marker2 && !noRoute) {
@@ -461,7 +461,7 @@ const ResponderMapScreen: React.FC = () => {
               latitude: c[1],
               longitude: c[0],
             }))}
-            strokeColor="#4a9154"
+            strokeColor="#44d46a"
             strokeWidth={3}
           />
         </MapView>
