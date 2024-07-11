@@ -153,7 +153,7 @@ const ResponderMapScreen: React.FC = () => {
     const interval = setInterval(() => {
       fetchEmergencyData();
       setIsLoading(false);
-    }, 10000);
+    }, 5000);
 
     return () => clearInterval(interval);
   }, [alertShown, dispatcher, user]);
