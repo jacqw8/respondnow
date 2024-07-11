@@ -1,8 +1,7 @@
 import {View, Text, StyleSheet, ActivityIndicator} from 'react-native';
-import React, {useState, useEffect, useRef} from 'react';
+import React, {useState, useEffect, useRef, useCallback} from 'react';
 import * as Location from 'expo-location';
 import MapView, {Marker, Circle, Polyline} from 'react-native-maps';
-import polyline from '@mapbox/polyline';
 import axios from 'axios';
 import {db} from '../../firebase';
 import {ref, onValue, get, update} from 'firebase/database';
@@ -38,28 +37,26 @@ const DispatcherMapScreen: React.FC = () => {
   }, [marker1]);
 
   // Calculate distance between markers
-  const calculateDistance = (
-    lat1: Number,
-    lon1: Number,
-    lat2: Number,
-    lon2: Number,
-  ) => {
-    const R = 6371; // Radius of the Earth in km
+  const calculateDistance = useCallback(
+    (lat1: Number, lon1: Number, lat2: Number, lon2: Number) => {
+      const R = 6371; // Radius of the Earth in km
 
-    const dLat = deg2rad(lat2 - lat1);
-    const dLon = deg2rad(lon2 - lon1);
+      const dLat = deg2rad(lat2 - lat1);
+      const dLon = deg2rad(lon2 - lon1);
 
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(deg2rad(lat1)) *
-        Math.cos(deg2rad(lat2)) *
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2);
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(deg2rad(lat1)) *
+          Math.cos(deg2rad(lat2)) *
+          Math.sin(dLon / 2) *
+          Math.sin(dLon / 2);
 
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    const distance = R * c; // Distance in km
-    return distance;
-  };
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      const distance = R * c; // Distance in km
+      return distance;
+    },
+    [],
+  );
 
   const deg2rad = (deg: number) => {
     return deg * (Math.PI / 180);
@@ -170,6 +167,7 @@ const DispatcherMapScreen: React.FC = () => {
     return () => clearInterval(interval);
   }, [responderLocations, marker2, distance, calculateDistance, user]);
 
+  //   Get permission and get dispatcher (my) location
   useEffect(() => {
     let subscription: Location.LocationSubscription | null = null;
     const requestLocationPermission = async () => {
@@ -185,6 +183,17 @@ const DispatcherMapScreen: React.FC = () => {
           latitude: location.coords.latitude,
           longitude: location.coords.longitude,
         });
+        const updates = {};
+        updates[`/dispatchers/${user.currentUser?.uid}/latitude`] =
+          location.coords.latitude;
+        updates[`/dispatchers/${user.currentUser?.uid}/longitude`] =
+          location.coords.longitude;
+        try {
+          await update(ref(db), updates);
+          console.log('Sending dispatcher location to db');
+        } catch (error) {
+          console.error('Error sending dispatcher location to db:', error);
+        }
 
         subscription = await Location.watchPositionAsync(
           {
@@ -192,12 +201,23 @@ const DispatcherMapScreen: React.FC = () => {
             timeInterval: 1000,
             distanceInterval: 1,
           },
-          newLocation => {
+          async newLocation => {
             setLocation(newLocation);
             setMarker1({
               latitude: newLocation.coords.latitude,
               longitude: newLocation.coords.longitude,
             });
+            const updates = {};
+            updates[`/dispatchers/${user.currentUser?.uid}/latitude`] =
+              newLocation.coords.latitude;
+            updates[`/dispatchers/${user.currentUser?.uid}/longitude`] =
+              newLocation.coords.longitude;
+            try {
+              await update(ref(db), updates);
+              console.log('Sending dispatcher location to db');
+            } catch (error) {
+              console.error('Error sending dispatcher location to db:', error);
+            }
           },
         );
       } catch (error) {
@@ -236,6 +256,7 @@ const DispatcherMapScreen: React.FC = () => {
     }
   }, [marker1, marker2, calculateDistance]);
 
+  //   Get route coordinates
   useEffect(() => {
     const fetchDirections = async () => {
       const interval = setInterval(async () => {

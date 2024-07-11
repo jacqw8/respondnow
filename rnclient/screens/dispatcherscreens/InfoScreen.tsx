@@ -17,7 +17,6 @@ import DispatcherMapScreen from './dispatcherscreens/DispatcherMapScreen';
 
 const InfoScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
-  const [location, setLocation] = useState<any>(null);
   const [errorMsg, setErrorMsg] = useState('');
   const [callerLatitude, setCallerLatitude] = useState<any>(null);
   const [callerLongitude, setCallerLongitude] = useState<any>(null);
@@ -27,32 +26,6 @@ const InfoScreen: React.FC = () => {
   const [callerLocation, setCallerLocation] = useState('');
   const [symptoms, setSymptoms] = useState('');
   const [context, setContext] = useState('');
-
-  useEffect(() => {
-    const requestLocationPermission = async () => {
-      try {
-        const {status} = await Location.requestForegroundPermissionsAsync();
-        if (status !== 'granted') {
-          setErrorMsg('Location permission not granted');
-          throw new Error('Location permission not granted');
-        }
-        const location = await Location.getCurrentPositionAsync({});
-        console.log('Current location:', location);
-        setLocation(location);
-      } catch (error) {
-        console.error('Error requesting location permission:', error);
-      }
-    };
-    console.log('use effect request location');
-    requestLocationPermission();
-  }, []);
-
-  let text = 'Waiting for location...';
-  if (errorMsg) {
-    text = errorMsg;
-  } else if (location) {
-    text = JSON.stringify(location);
-  }
 
   //   convert an address to coords
   const addressToCoords = async (address: string) => {
@@ -95,8 +68,8 @@ const InfoScreen: React.FC = () => {
     const userId = user.currentUser?.uid;
     await set(ref(db, `emergency/${userId}`), {
       address: address,
-      callerLatitude: lat,
-      callerLongitude: lon,
+      callerLatitude: parseFloat(lat),
+      callerLongitude: parseFloat(lon),
       symptoms: symptoms,
       context: context,
     });

@@ -26,11 +26,12 @@ const ResponderMapScreen: React.FC = () => {
   const padding = 1.2;
   const [conditionsMet, setConditionsMet] = useState(false);
   const [ignored, setIgnored] = useState(false);
-  const [dispatcher, setDispatcher] = useState<any>(null);
+  const [dispatcherId, setDispatcherId] = useState<any>(null);
   const [alertShown, setAlertShown] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [noRoute, setNoRoute] = useState(false);
+  const [dispatcherLocation, setDispatcherLocation] = useState<any>(null);
 
   const mapRef = useRef(null);
   const user = getAuth();
@@ -96,7 +97,7 @@ const ResponderMapScreen: React.FC = () => {
           console.log('Responder data:', data);
           if (data && 'isNearEmergency' in data) {
             if (data.isNearEmergency) {
-              setDispatcher(data.dispatcherId);
+              setDispatcherId(data.dispatcherId);
               console.log('dispatcher id', data.dispatcherId);
               if (!alertShown) {
                 Alert.alert(
@@ -133,13 +134,13 @@ const ResponderMapScreen: React.FC = () => {
         console.log('Error getting responder database:', error);
       }
       try {
-        const callerRef = ref(db, `emergency/${dispatcher}`);
+        const callerRef = ref(db, `emergency/${dispatcherId}`);
         const snapshot = await get(callerRef);
         if (snapshot.exists()) {
           const data = snapshot.val();
           setMarker2({
-            latitude: parseFloat(data.callerLatitude),
-            longitude: parseFloat(data.callerLongitude),
+            latitude: data.callerLatitude,
+            longitude: data.callerLongitude,
             description: 'Emergency at this location',
           });
         } else {
@@ -155,7 +156,7 @@ const ResponderMapScreen: React.FC = () => {
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [alertShown, dispatcher, user]);
+  }, [alertShown, dispatcherId, user]);
 
   useEffect(() => {
     const fetchDirections = async () => {
@@ -177,7 +178,7 @@ const ResponderMapScreen: React.FC = () => {
             //     longitude: coord[0],
             //   }));
             setRouteCoordinates(coords);
-            console.log('route coords:', routeCoordinates);
+            console.log('route coords:', coords);
             clearInterval(interval);
             setIsLoading(false);
             setNoRoute(true);
@@ -342,7 +343,7 @@ const ResponderMapScreen: React.FC = () => {
               latitude: c[1],
               longitude: c[0],
             }))}
-            strokeColor="#FF0000"
+            strokeColor="#4a9154"
             strokeWidth={3}
           />
         </MapView>
@@ -397,4 +398,4 @@ const styles = StyleSheet.create({
 export default ResponderMapScreen;
 
 // To-do:
-// keep checking distance - if distance is too far, update the backend
+// show dispatcher
