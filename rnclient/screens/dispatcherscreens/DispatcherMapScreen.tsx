@@ -124,10 +124,16 @@ const DispatcherMapScreen: React.FC = () => {
     const updateFilteredResponders = async filteredResponders => {
       const updates = {};
       filteredResponders.forEach(responder => {
-        updates[`responders/${responder.userId}/isNearEmergency`] = true;
-        updates[
-          `responders/${responder.userId}/dispatcherId`
-        ] = `${user.currentUser?.uid}`;
+        if (
+          !('isNearEmergency' in responder) ||
+          ('isNearEmergency' in responder &&
+            responder.isNearEmergency !== 'responding')
+        ) {
+          updates[`responders/${responder.userId}/isNearEmergency`] = true;
+          updates[
+            `responders/${responder.userId}/dispatcherId`
+          ] = `${user.currentUser?.uid}`;
+        }
       });
 
       try {
@@ -151,6 +157,7 @@ const DispatcherMapScreen: React.FC = () => {
             const responderRef = ref(db, `responders/${loc.userId}`);
             const snapshot = await get(responderRef);
             if (snapshot.exists()) {
+                console.log('filter loc:', loc);
               const data = snapshot.val();
               if (
                 'dispatcherId' in data &&
