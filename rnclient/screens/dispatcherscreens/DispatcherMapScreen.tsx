@@ -1,4 +1,4 @@
-import {View, Text, StyleSheet} from 'react-native';
+import {View, Text, StyleSheet, ActivityIndicator} from 'react-native';
 import React, {useState, useEffect, useRef} from 'react';
 import * as Location from 'expo-location';
 import MapView, {Marker, Circle, Polyline} from 'react-native-maps';
@@ -23,6 +23,12 @@ const DispatcherMapScreen: React.FC = () => {
   const [callerLocation, setCallerLocation] = useState(null);
   const user = getAuth();
   const [conditionsMet, setConditionsMet] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState(
+    'Getting emergency and responder locations...',
+  );
+  const [isLoading, setIsLoading] = useState(true);
+  const [noRoute, setNoRoute] = useState(false);
+
   const mapRef = useRef(null);
 
   useEffect(() => {
@@ -66,6 +72,8 @@ const DispatcherMapScreen: React.FC = () => {
         const callerRef = ref(db, `emergency/${user.currentUser?.uid}`);
         const snapshot = await get(callerRef);
         if (snapshot.exists()) {
+          setIsLoading(true);
+          setLoadingMessage('Getting location of caller...');
           const data = snapshot.val();
           console.log('Caller data:', parseFloat(data.callerLatitude));
           setCallerLocation(data);
@@ -73,6 +81,7 @@ const DispatcherMapScreen: React.FC = () => {
             latitude: parseFloat(data.callerLatitude),
             longitude: parseFloat(data.callerLongitude),
           });
+          setIsLoading(false);
         } else {
           console.log('Caller data doesnt exist');
         }
@@ -81,8 +90,9 @@ const DispatcherMapScreen: React.FC = () => {
       }
     };
     fetchCallerLocation();
-  }, []);
+  }, [user]);
 
+  //   Zoom into emergency
   useEffect(() => {
     if (mapRef.current && marker2) {
       mapRef.current.animateToRegion(
@@ -97,6 +107,7 @@ const DispatcherMapScreen: React.FC = () => {
     }
   }, [deltaLat, deltaLng, marker1, marker2]);
 
+  //   Get the responder locations
   useEffect(() => {
     const interval = setInterval(() => {
       // get responders
@@ -111,6 +122,7 @@ const DispatcherMapScreen: React.FC = () => {
     return () => clearInterval(interval);
   });
 
+  //   Filter responders based on distance
   useEffect(() => {
     const updateFilteredResponders = async filteredResponders => {
       const updates = {};
@@ -150,12 +162,13 @@ const DispatcherMapScreen: React.FC = () => {
         // Update database with filtered responders
         updateFilteredResponders(filtered);
         clearInterval(interval);
+        setIsLoading(false);
       }
     };
     // Interval for subsequent executions
     const interval = setInterval(filterAndSetResponders, 10000);
     return () => clearInterval(interval);
-  }, [responderLocations, marker2, distance, calculateDistance]);
+  }, [responderLocations, marker2, distance, calculateDistance, user]);
 
   useEffect(() => {
     let subscription: Location.LocationSubscription | null = null;
@@ -221,7 +234,7 @@ const DispatcherMapScreen: React.FC = () => {
         ),
       );
     }
-  }, [marker1, marker2]);
+  }, [marker1, marker2, calculateDistance]);
 
   useEffect(() => {
     const fetchDirections = async () => {
@@ -236,12 +249,8 @@ const DispatcherMapScreen: React.FC = () => {
             console.log('url:', url);
             const response = await axios.get(url);
             const coords = response.data.features[0].geometry.coordinates;
-            //   const latlng = coords.map((coord: Number) => ({
-            //     latitude: coord[1],
-            //     longitude: coord[0],
-            //   }));
             setRouteCoordinates(coords);
-            console.log('route coords:', routeCoordinates);
+            console.log('route coords:', coords);
             clearInterval(interval);
           } catch (error) {
             console.error('Error fetching directions:', error);
@@ -333,6 +342,12 @@ const DispatcherMapScreen: React.FC = () => {
           )}
         </MapView>
       )}
+      {isLoading && (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#0000ff" />
+          <Text style={styles.loadingText}>{loadingMessage}</Text>
+        </View>
+      )}
     </View>
   );
 };
@@ -346,6 +361,22 @@ const styles = StyleSheet.create({
   },
   map: {
     ...StyleSheet.absoluteFillObject,
+  },
+  loadingContainer: {
+    position: 'absolute',
+    top: '50%',
+    left: '32%',
+    transform: [{translateX: -50}, {translateY: -50}],
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    padding: 10,
+    borderRadius: 10,
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 

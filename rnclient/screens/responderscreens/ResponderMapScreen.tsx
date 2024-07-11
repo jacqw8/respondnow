@@ -9,12 +9,10 @@ import {
 import React, {useState, useEffect, useRef} from 'react';
 import * as Location from 'expo-location';
 import MapView, {Marker, Polyline} from 'react-native-maps';
-import polyline from '@mapbox/polyline';
 import axios from 'axios';
 import {db} from '../../firebase';
 import {ref, update, get} from 'firebase/database';
 import {getAuth} from 'firebase/auth';
-import messaging from 'firebase/messaging';
 
 const ResponderMapScreen: React.FC = () => {
   const [location, setLocation] = useState<any>(null);
@@ -26,15 +24,16 @@ const ResponderMapScreen: React.FC = () => {
   const [deltaLat, setDeltaLat] = useState<any>(null);
   const [deltaLng, setDeltaLng] = useState<any>(null);
   const padding = 1.2;
-  const user = getAuth();
   const [conditionsMet, setConditionsMet] = useState(false);
   const [ignored, setIgnored] = useState(false);
-  const mapRef = useRef(null);
   const [dispatcher, setDispatcher] = useState<any>(null);
   const [alertShown, setAlertShown] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [noRoute, setNoRoute] = useState(false);
+
+  const mapRef = useRef(null);
+  const user = getAuth();
 
   useEffect(() => {
     if (marker1) {
@@ -302,7 +301,6 @@ const ResponderMapScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <Text>Dispatcher Screen</Text>
       {conditionsMet && (
         <MapView
           ref={mapRef}
@@ -399,6 +397,4 @@ const styles = StyleSheet.create({
 export default ResponderMapScreen;
 
 // To-do:
-// show caller location on map
-// respond to emergency -
 // keep checking distance - if distance is too far, update the backend
