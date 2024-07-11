@@ -106,7 +106,7 @@ const ResponderMapScreen: React.FC = () => {
             if (data.isNearEmergency) {
               setDispatcherId(data.dispatcherId);
               console.log('dispatcher id', data.dispatcherId);
-              if (!alertShown) {
+              if (!alertShown && data.isNearEmergency !== 'responding') {
                 Alert.alert(
                   'Emergency Alert',
                   'There is an emergency near you. What would you like to do?',
@@ -184,6 +184,24 @@ const ResponderMapScreen: React.FC = () => {
                   ],
                   {cancelable: false},
                 );
+                setAlertShown(true);
+              } else if (data.isNearEmergency === 'responding') {
+                console.log('already clicked responding', data.dispatcherId);
+                // update dispatcher location
+                const dispatcherRef = ref(
+                  db,
+                  `dispatchers/${data.dispatcherId}`,
+                );
+                const snapshot = await get(dispatcherRef);
+                if (snapshot.exists()) {
+                  const dispatcherData = snapshot.val();
+                  setMarker3({
+                    latitude: dispatcherData.latitude,
+                    longitude: dispatcherData.longitude,
+                    description: 'Dispatcher at this location',
+                    name: dispatcherData.name,
+                  });
+                }
                 setAlertShown(true);
               }
               clearInterval(interval);
