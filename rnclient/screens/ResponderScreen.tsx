@@ -72,7 +72,7 @@ const ResponderScreen: React.FC = () => {
   return (
     <Tab.Navigator>
       <Tab.Screen name="Login" component={AuthScreen} />
-      {/* <Tab.Screen name="Info" component={ResponderInfoScreen} /> */}
+      <Tab.Screen name="Info" component={ResponderInfoScreen} />
       <Tab.Screen name="Map" component={ResponderMapScreen} />
     </Tab.Navigator>
   );

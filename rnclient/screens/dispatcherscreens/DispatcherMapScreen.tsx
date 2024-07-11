@@ -138,14 +138,14 @@ const DispatcherMapScreen: React.FC = () => {
 
       try {
         await update(ref(db), updates);
-        console.log('Filtered responders updated successfully.');
+        console.log('Filtered responders updated successfully');
       } catch (error) {
         console.error('Error updating filtered responders:', error);
       }
     };
     const filterAndSetResponders = async () => {
       if (responderLocations.length > 0) {
-        const filtered = [];
+        const filtered: React.SetStateAction<never[]> = [];
         for (const loc of responderLocations) {
           const dist = calculateDistance(
             marker2.latitude,
@@ -153,20 +153,42 @@ const DispatcherMapScreen: React.FC = () => {
             loc.latitude,
             loc.longitude,
           );
+          const responderRef = ref(db, `responders/${loc.userId}`);
           if (dist <= distance) {
-            const responderRef = ref(db, `responders/${loc.userId}`);
             const snapshot = await get(responderRef);
             if (snapshot.exists()) {
-                console.log('filter loc:', loc);
+              console.log('filter loc:', loc);
               const data = snapshot.val();
               if (
                 'dispatcherId' in data &&
                 data.dispatcherId === user.currentUser?.uid
               ) {
                 filtered.push(loc);
+              } else if (!('dispatcherId' in data)) {
+                filtered.push(loc);
               }
             } else {
               filtered.push(loc);
+            }
+          } else {
+            const snapshot = await get(responderRef);
+            if (snapshot.exists()) {
+              // responder is now too far from emergency
+              const data = snapshot.val();
+              if (data.dispatcherId === user.currentUser?.uid) {
+                const updates = {};
+                updates[`responders/${loc.userId}/dispatcherId`] = null;
+                updates[`responders/${loc.userId}/isNearEmergency`] = null;
+                try {
+                  await update(ref(db), updates);
+                  console.log('Successfully deleted the dispatcherId field');
+                } catch (error) {
+                  console.error(
+                    'Error deleting the dispatcherId field:',
+                    error,
+                  );
+                }
+              }
             }
           }
         }
@@ -290,7 +312,7 @@ const DispatcherMapScreen: React.FC = () => {
             console.log('route coords:', coords);
             clearInterval(interval);
           } catch (error) {
-            console.error('Error fetching directions:', error);
+            console.log('Error fetching directions:', error);
           }
         }
       }, 15000);

@@ -138,9 +138,7 @@ const ResponderMapScreen: React.FC = () => {
                             ),
                             {
                               name: user.currentUser?.displayName,
-                              userId: user.currentUser?.uid,
-                              latitude: loc.coords.latitude,
-                              longitude: loc.coords.longitude,
+                              userId: user.currentUser?.uid
                             },
                           );
                           console.log(
@@ -237,7 +235,7 @@ const ResponderMapScreen: React.FC = () => {
     return () => clearInterval(interval);
   }, [alertShown, dispatcherId, user]);
 
-  useEffect(() => {
+  // useEffect(() => {
     const fetchDirections = async () => {
       const interval = setInterval(async () => {
         if (marker1 && marker2 && !noRoute) {
@@ -262,7 +260,7 @@ const ResponderMapScreen: React.FC = () => {
             setIsLoading(false);
             setNoRoute(true);
           } catch (error) {
-            console.error('Error fetching directions:', error);
+            console.log('Error fetching directions:', error);
           }
         }
       }, 15000);
@@ -296,8 +294,6 @@ const ResponderMapScreen: React.FC = () => {
         {
           name: user.currentUser?.displayName,
           userId: user.currentUser?.uid,
-          latitude: loc.coords.latitude,
-          longitude: loc.coords.longitude,
         },
       );
       console.log('Sending responder info to dispatcher backend');
@@ -519,4 +515,4 @@ const styles = StyleSheet.create({
 export default ResponderMapScreen;
 
 // To-do:
-// show dispatcher
+

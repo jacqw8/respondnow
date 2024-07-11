@@ -5,65 +5,77 @@ import {
   TextInput,
   Text,
   TouchableOpacity,
+  ScrollView,
 } from 'react-native';
-import * as Location from 'expo-location';
 import axios from 'axios';
 import {db} from '../../firebase';
-import {ref, set} from 'firebase/database';
+import {ref, get} from 'firebase/database';
 import {getAuth} from 'firebase/auth';
 import {NavigationProp, useNavigation} from '@react-navigation/native';
 
 import DispatcherMapScreen from './dispatcherscreens/DispatcherMapScreen';
 
 const ResponderInfoScreen: React.FC = () => {
-  const navigation = useNavigation<NavigationProp>();
-  const [location, setLocation] = useState<any>(null);
-  const [errorMsg, setErrorMsg] = useState('');
-  const [callerLatitude, setCallerLatitude] = useState<any>(null);
-  const [callerLongitude, setCallerLongitude] = useState<any>(null);
+  const [dispatcherId, setDispatcherId] = useState(null);
+  const [responder, setResponder] = useState(null);
+  const [info, setInfo] = useState(null);
   const user = getAuth(); // dispatcher user
 
-  //   Caller/patient info
-  const [callerLocation, setCallerLocation] = useState('');
-  const [symptoms, setSymptoms] = useState('');
-  const [context, setContext] = useState('');
-
+  useEffect(() => {
+    const fetchInfo = async () => {
+      try {
+        const responderRef = ref(db, `responders/${user.currentUser?.uid}`);
+        const snapshot = await get(responderRef);
+        if (snapshot.exists()) {
+          const responderData = snapshot.val();
+          setResponder(responderData);
+          setDispatcherId(responderData.dispatcherId);
+          //     get info from dispatcher id
+          const emergencyRef = ref(
+            db,
+            `emergency/${responderData.dispatcherId}`,
+          );
+          const emergencySnapshot = await get(emergencyRef);
+          if (emergencySnapshot.exists()) {
+            const info = emergencySnapshot.val();
+            setInfo(info);
+            console.log('Emergency info:', info);
+          } else {
+            console.log('No emergency data available');
+          }
+        } else {
+          console.log('No responder data available');
+        }
+      } catch (error) {
+        console.error('Error fetching info:', error);
+      }
+    };
+    fetchInfo();
+  }, [user]);
 
   return (
-    <View style={styles.container}>
-      {/* Location input */}
-      <TextInput
-        style={styles.input}
-        placeholder="Caller Location"
-        value={callerLocation}
-        onChangeText={setCallerLocation}
-      />
-      {/* Symptoms input */}
-      <TextInput
-        style={styles.input}
-        placeholder="Symptoms"
-        value={symptoms}
-        onChangeText={setSymptoms}
-      />
-      {/* Context input */}
-      <TextInput
-        style={styles.input}
-        placeholder="Context"
-        value={context}
-        onChangeText={setContext}
-      />
-      <TouchableOpacity style={styles.button}>
-        <Text style={styles.buttonText}>Send Alerts</Text>
-      </TouchableOpacity>
-    </View>
+    <ScrollView style={styles.scrollContainer}>
+      {info ? (
+        <>
+          <Text style={styles.header}>Responder Information</Text>
+          <Text style={styles.label}>Address:</Text>
+          <Text style={styles.value}>{info.address}</Text>
+          <Text style={styles.label}>Symptoms:</Text>
+          <Text style={styles.value}>{info.symptoms}</Text>
+          <Text style={styles.label}>Context:</Text>
+          <Text style={styles.value}>{info.context}</Text>
+        </>
+      ) : (
+        <Text>Welcome {user.currentUser?.displayName}!</Text>
+      )}
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  scrollContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    padding: 20,
     backgroundColor: '#fff',
   },
   input: {
@@ -88,6 +100,20 @@ const styles = StyleSheet.create({
     fontSize: 18,
     textAlign: 'center',
   },
+  header: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+  },
+  label: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginTop: 10,
+  },
+  value: {
+    fontSize: 16,
+    marginBottom: 10,
+  },
 });
 
 export default ResponderInfoScreen;
@@ -96,5 +122,5 @@ export default ResponderInfoScreen;
 // get caller info onto screen
 // say if you're responding
 // distance from caller
-// caller info 
-// 
+// caller info
+//
