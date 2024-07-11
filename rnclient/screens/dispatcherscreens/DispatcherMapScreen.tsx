@@ -124,7 +124,6 @@ const DispatcherMapScreen: React.FC = () => {
     const updateFilteredResponders = async filteredResponders => {
       const updates = {};
       filteredResponders.forEach(responder => {
-        // Make sure to change this back after emergency is done
         updates[`responders/${responder.userId}/isNearEmergency`] = true;
         updates[
           `responders/${responder.userId}/dispatcherId`
@@ -138,22 +137,32 @@ const DispatcherMapScreen: React.FC = () => {
         console.error('Error updating filtered responders:', error);
       }
     };
-    const filterAndSetResponders = () => {
+    const filterAndSetResponders = async () => {
       if (responderLocations.length > 0) {
-        const filtered = responderLocations.filter(loc => {
-          // calculate distance of responder to patient
+        const filtered = [];
+        for (const loc of responderLocations) {
           const dist = calculateDistance(
             marker2.latitude,
             marker2.longitude,
             loc.latitude,
             loc.longitude,
           );
-          console.log('name:', loc.name);
-          console.log('uid:', loc.userId);
-          console.log('dist:', dist);
-          console.log('my distance', distance);
-          return dist <= distance;
-        });
+          if (dist <= distance) {
+            const responderRef = ref(db, `responders/${loc.userId}`);
+            const snapshot = await get(responderRef);
+            if (snapshot.exists()) {
+              const data = snapshot.val();
+              if (
+                'dispatcherId' in data &&
+                data.dispatcherId === user.currentUser?.uid
+              ) {
+                filtered.push(loc);
+              }
+            } else {
+              filtered.push(loc);
+            }
+          }
+        }
         setFilteredResponders(filtered);
         console.log('filtered responders', filtered);
         // Update database with filtered responders

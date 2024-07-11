@@ -167,6 +167,16 @@ const ResponderMapScreen: React.FC = () => {
                             description: 'Dispatcher at this location',
                             name: dispatcherData.name,
                           });
+                          const updates = {};
+                          updates[
+                            `responders/${user.currentUser?.uid}/isNearEmergency`
+                          ] = 'responding';
+                          try {
+                            await update(ref(db), updates);
+                            console.log('Successfully update responding');
+                          } catch (error) {
+                            console.error('Error updating responding:', error);
+                          }
                         }
                         // End of adding responder to array
                       },
