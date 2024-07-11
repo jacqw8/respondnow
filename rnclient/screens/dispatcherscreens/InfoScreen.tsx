@@ -6,14 +6,11 @@ import {
   Text,
   TouchableOpacity,
 } from 'react-native';
-import * as Location from 'expo-location';
 import axios from 'axios';
 import {db} from '../../firebase';
 import {ref, set} from 'firebase/database';
 import {getAuth} from 'firebase/auth';
 import {NavigationProp, useNavigation} from '@react-navigation/native';
-
-import DispatcherMapScreen from './dispatcherscreens/DispatcherMapScreen';
 
 const InfoScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();

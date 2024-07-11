@@ -11,7 +11,13 @@ import * as Location from 'expo-location';
 import MapView, {Marker, Polyline} from 'react-native-maps';
 import axios from 'axios';
 import {db} from '../../firebase';
-import {ref, update, get} from 'firebase/database';
+import {
+  ref,
+  update,
+  get,
+  DatabaseReference,
+  runTransaction,
+} from 'firebase/database';
 import {getAuth} from 'firebase/auth';
 
 const ResponderMapScreen: React.FC = () => {
@@ -25,7 +31,7 @@ const ResponderMapScreen: React.FC = () => {
   const [deltaLng, setDeltaLng] = useState<any>(null);
   const padding = 1.2;
   const [conditionsMet, setConditionsMet] = useState(false);
-  const [ignored, setIgnored] = useState(false);
+  const [ignored, setIgnored] = useState(true);
   const [dispatcherId, setDispatcherId] = useState<any>(null);
   const [alertShown, setAlertShown] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('');
@@ -114,11 +120,43 @@ const ResponderMapScreen: React.FC = () => {
                     },
                     {
                       text: 'Respond',
-                      onPress: () => {
+                      onPress: async () => {
                         console.log('Respond Pressed');
                         setIgnored(false);
                         setIsLoading(true);
                         setLoadingMessage('Getting location of emergency...');
+                        console.log('sending an update to dispatcher');
+                        // Send an alert to dispatcher,
+                        // Update responders array in backend for dispatcher
+                        const updates = {};
+                        const loc = await Location.getCurrentPositionAsync({});
+                        updates[
+                          `/dispatchers/${data.dispatcherId}/responders/${user.currentUser?.uid}/name`
+                        ] = user.currentUser?.displayName;
+                        updates[
+                          `/dispatchers/${data.dispatcherId}/responders/${user.currentUser?.uid}/uid`
+                        ] = user.currentUser?.uid;
+                        updates[
+                          `/dispatchers/${data.dispatcherId}/responders/${user.currentUser?.uid}/latitude`
+                        ] = loc.coords.latitude;
+                        updates[
+                          `/dispatchers/${data.dispatcherId}/responders/${user.currentUser?.uid}/longitude`
+                        ] = loc.coords.longitude;
+
+                        console.log('updates to be sent:', updates);
+                        try {
+                          await update(ref(db), updates);
+                          console.log(
+                            'Sending responder info to dispatcher backend',
+                          );
+                        } catch (error) {
+                          console.error(
+                            'Error sending responder info dispatcher backend:',
+                            error,
+                          );
+                        }
+                        console.log('Responder added successfully');
+                        // End of adding responder to array
                       },
                     },
                   ],
@@ -138,6 +176,7 @@ const ResponderMapScreen: React.FC = () => {
         const snapshot = await get(callerRef);
         if (snapshot.exists()) {
           const data = snapshot.val();
+          setIsLoading(false);
           setMarker2({
             latitude: data.callerLatitude,
             longitude: data.callerLongitude,
@@ -149,10 +188,10 @@ const ResponderMapScreen: React.FC = () => {
       } catch (error) {
         console.log('Error fetching caller data', error);
       }
+      setIsLoading(false);
     };
     const interval = setInterval(() => {
       fetchEmergencyData();
-      setIsLoading(false);
     }, 5000);
 
     return () => clearInterval(interval);
@@ -192,7 +231,7 @@ const ResponderMapScreen: React.FC = () => {
     fetchDirections();
   }, [marker1, marker2, routeCoordinates]);
 
-  const handleViewEmergency = () => {
+  const handleViewEmergency = async () => {
     setIgnored(false);
     console.log('Viewing emergency:', marker2);
     if (mapRef.current && marker2) {
@@ -206,13 +245,35 @@ const ResponderMapScreen: React.FC = () => {
         1000,
       ); // Duration in milliseconds
     }
+    const updates = {};
+    updates[
+      `/dispatchers/${dispatcherId}/responders/${user.currentUser?.uid}/name`
+    ] = user.currentUser?.displayName;
+    updates[
+      `/dispatchers/${dispatcherId}/responders/${user.currentUser?.uid}/uid`
+    ] = user.currentUser?.uid;
+    updates[
+      `/dispatchers/${dispatcherId}/responders/${user.currentUser?.uid}/latitude`
+    ] = marker1.latitude;
+    updates[
+      `/dispatchers/${dispatcherId}/responders/${user.currentUser?.uid}/longitude`
+    ] = marker1.longitude;
+
+    console.log('updates to be sent:', updates);
+    try {
+      await update(ref(db), updates);
+      console.log('Sending responder info to dispatcher backend');
+    } catch (error) {
+      console.error('Error sending responder info dispatcher backend:', error);
+    }
+    console.log('Responder added successfully');
   };
 
   useEffect(() => {
-    if (marker2 && !ignored) {
+    if (marker2 && !ignored && !dispatcherId) {
       handleViewEmergency();
     }
-  }, [marker2, ignored]);
+  }, [marker2, ignored, dispatcherId]);
 
   const sendLocToDb = async () => {
     if (!location || !user) {
@@ -354,15 +415,16 @@ const ResponderMapScreen: React.FC = () => {
           <Text style={styles.loadingText}>{loadingMessage}</Text>
         </View>
       )}
-      {/* {ignored && (
-        <View style={{marginTop: 10}}>
-          <TouchableOpacity
-            title="View Emergency"
-            onPress={handleViewEmergency}>
-            <Text>View Emergency</Text>
-          </TouchableOpacity>
-        </View>
-      )} */}
+      {ignored && alertShown && (
+        // <View style={styles.loadingContainer}>
+        <TouchableOpacity
+          title="View Emergency"
+          onPress={handleViewEmergency}
+          style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>View Emergency</Text>
+        </TouchableOpacity>
+        // </View>
+      )}
     </View>
   );
 };
@@ -380,16 +442,14 @@ const styles = StyleSheet.create({
   loadingContainer: {
     position: 'absolute',
     top: '50%',
-    left: '32%',
-    transform: [{translateX: -50}, {translateY: -50}],
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    padding: 10,
+    padding: 20,
     borderRadius: 10,
+    alignSelf: 'center',
   },
   loadingText: {
-    marginTop: 10,
     fontSize: 16,
     fontWeight: 'bold',
   },
