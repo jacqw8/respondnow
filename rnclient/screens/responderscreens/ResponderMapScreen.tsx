@@ -17,6 +17,7 @@ import {
   get,
   DatabaseReference,
   runTransaction,
+  set,
 } from 'firebase/database';
 import {getAuth} from 'firebase/auth';
 
@@ -31,13 +32,13 @@ const ResponderMapScreen: React.FC = () => {
   const [deltaLng, setDeltaLng] = useState<any>(null);
   const padding = 1.2;
   const [conditionsMet, setConditionsMet] = useState(false);
-  const [ignored, setIgnored] = useState(true);
+  const [ignored, setIgnored] = useState(false);
   const [dispatcherId, setDispatcherId] = useState<any>(null);
   const [alertShown, setAlertShown] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [noRoute, setNoRoute] = useState(false);
-  const [dispatcherLocation, setDispatcherLocation] = useState<any>(null);
+  const [marker3, setMarker3] = useState<any>(null);
 
   const mapRef = useRef(null);
   const user = getAuth();
@@ -128,24 +129,20 @@ const ResponderMapScreen: React.FC = () => {
                         console.log('sending an update to dispatcher');
                         // Send an alert to dispatcher,
                         // Update responders array in backend for dispatcher
-                        const updates = {};
                         const loc = await Location.getCurrentPositionAsync({});
-                        updates[
-                          `/dispatchers/${data.dispatcherId}/responders/${user.currentUser?.uid}/name`
-                        ] = user.currentUser?.displayName;
-                        updates[
-                          `/dispatchers/${data.dispatcherId}/responders/${user.currentUser?.uid}/uid`
-                        ] = user.currentUser?.uid;
-                        updates[
-                          `/dispatchers/${data.dispatcherId}/responders/${user.currentUser?.uid}/latitude`
-                        ] = loc.coords.latitude;
-                        updates[
-                          `/dispatchers/${data.dispatcherId}/responders/${user.currentUser?.uid}/longitude`
-                        ] = loc.coords.longitude;
-
-                        console.log('updates to be sent:', updates);
                         try {
-                          await update(ref(db), updates);
+                          await set(
+                            ref(
+                              db,
+                              `/dispatchers/${data.dispatcherId}/responders/${user.currentUser?.uid}`,
+                            ),
+                            {
+                              name: user.currentUser?.displayName,
+                              userId: user.currentUser?.uid,
+                              latitude: loc.coords.latitude,
+                              longitude: loc.coords.longitude,
+                            },
+                          );
                           console.log(
                             'Sending responder info to dispatcher backend',
                           );
@@ -156,6 +153,21 @@ const ResponderMapScreen: React.FC = () => {
                           );
                         }
                         console.log('Responder added successfully');
+                        // update dispatcher location
+                        const dispatcherRef = ref(
+                          db,
+                          `dispatchers/${data.dispatcherId}`,
+                        );
+                        const snapshot = await get(dispatcherRef);
+                        if (snapshot.exists()) {
+                          const dispatcherData = snapshot.val();
+                          setMarker3({
+                            latitude: dispatcherData.latitude,
+                            longitude: dispatcherData.longitude,
+                            description: 'Dispatcher at this location',
+                            name: dispatcherData.name,
+                          });
+                        }
                         // End of adding responder to array
                       },
                     },
@@ -245,26 +257,36 @@ const ResponderMapScreen: React.FC = () => {
         1000,
       ); // Duration in milliseconds
     }
-    const updates = {};
-    updates[
-      `/dispatchers/${dispatcherId}/responders/${user.currentUser?.uid}/name`
-    ] = user.currentUser?.displayName;
-    updates[
-      `/dispatchers/${dispatcherId}/responders/${user.currentUser?.uid}/uid`
-    ] = user.currentUser?.uid;
-    updates[
-      `/dispatchers/${dispatcherId}/responders/${user.currentUser?.uid}/latitude`
-    ] = marker1.latitude;
-    updates[
-      `/dispatchers/${dispatcherId}/responders/${user.currentUser?.uid}/longitude`
-    ] = marker1.longitude;
-
-    console.log('updates to be sent:', updates);
+    // send responder location
+    const loc = await Location.getCurrentPositionAsync({});
     try {
-      await update(ref(db), updates);
+      await set(
+        ref(
+          db,
+          `/dispatchers/${dispatcherId}/responders/${user.currentUser?.uid}`,
+        ),
+        {
+          name: user.currentUser?.displayName,
+          userId: user.currentUser?.uid,
+          latitude: loc.coords.latitude,
+          longitude: loc.coords.longitude,
+        },
+      );
       console.log('Sending responder info to dispatcher backend');
     } catch (error) {
       console.error('Error sending responder info dispatcher backend:', error);
+    }
+    // update dispatcher location
+    const dispatcherRef = ref(db, `dispatchers/${dispatcherId}`);
+    const snapshot = await get(dispatcherRef);
+    if (snapshot.exists()) {
+      const dispatcherData = snapshot.val();
+      setMarker3({
+        latitude: dispatcherData.latitude,
+        longitude: dispatcherData.longitude,
+        description: 'Dispatcher at this location',
+        name: dispatcherData.name,
+      });
     }
     console.log('Responder added successfully');
   };
@@ -397,8 +419,19 @@ const ResponderMapScreen: React.FC = () => {
               image={require('../../imgs/caller1.png')}
             />
           )}
+          {/* Dispatcher marker */}
+          {marker3 && !ignored && alertShown && (
+            <Marker
+              coordinate={{
+                latitude: marker3.latitude,
+                longitude: marker3.longitude,
+              }}
+              title={`Dispatcher ${marker3.name}`}
+              description={marker3.description}
+              image={require('../../imgs/emt1.png')}
+            />
+          )}
           {/* Render route */}
-
           <Polyline
             coordinates={routeCoordinates.map(c => ({
               latitude: c[1],
