@@ -164,24 +164,6 @@ const ChatScreen = ({responder}) => {
     );
   };
 
-  //   const renderBubble = props => {
-  //     return (
-  //       <Bubble
-  //         {...props}
-  //         wrapperStyle={{
-  //           right: {
-  //             backgroundColor: '#007AFF',
-  //           },
-  //         }}
-  //         textStyle={{
-  //           right: {
-  //             color: '#fff',
-  //           },
-  //         }}
-  //       />
-  //     );
-  //   };
-
   return (
     <GiftedChat
       messages={messages}
@@ -190,7 +172,6 @@ const ChatScreen = ({responder}) => {
         _id: user.currentUser?.uid,
         name: user.currentUser?.displayName,
       }}
-      //       renderBubble={renderBubble}
       //       renderSend={renderSend}
       alwaysShowSend
     />

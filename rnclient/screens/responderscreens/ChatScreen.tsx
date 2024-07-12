@@ -1,6 +1,6 @@
 import {getAuth} from 'firebase/auth';
 import React, {useState, useCallback, useEffect} from 'react';
-import {GiftedChat} from 'react-native-gifted-chat';
+import {GiftedChat, Bubble} from 'react-native-gifted-chat';
 import {db} from '../../firebase';
 import {get, off, onValue, push, ref, set, update} from 'firebase/database';
 
