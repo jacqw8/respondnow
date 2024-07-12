@@ -1,24 +1,12 @@
-import {getAuth} from 'firebase/auth';
-import React, {useState, useCallback, useEffect} from 'react';
-import {View, StyleSheet, Text, Button} from 'react-native';
-import {GiftedChat} from 'react-native-gifted-chat';
-import {db} from '../firebase';
-import {get, off, onValue, push, ref, set, update} from 'firebase/database';
+import { getAuth } from 'firebase/auth';
+import React, { useState, useCallback, useEffect } from 'react';
+import { GiftedChat } from 'react-native-gifted-chat';
+import { db } from '../firebase';
+import { get, off, onValue, push, ref, set, update } from 'firebase/database';
 
 const ChatScreen = () => {
   const user = getAuth();
-  const [messages, setMessages] = useState([
-    {
-      _id: 1,
-      text: `Hello! How can I help you today, ${user.currentUser?.displayName}?`,
-      createdAt: new Date(),
-      user: {
-        _id: 2,
-        name: 'Dispatcher',
-        // avatar: '../imgs/emt1.png',
-      },
-    },
-  ]);
+  const [messages, setMessages] = useState([]);
   const [dispatcher, setDispatcher] = useState(null);
   const [chatroomId, setChatroomId] = useState(null);
 
@@ -28,12 +16,12 @@ const ChatScreen = () => {
       const snap = await get(userRef);
       if (snap.exists()) {
         const data = snap.val();
-        setDispatcher({name: data.name, userId: data.dispatcherId});
+        setDispatcher({ userId: data.dispatcherId });
         console.log('Attempting to chat with dispatcher:', data.dispatcherId);
 
         const myRef = ref(
           db,
-          `responders/${user.currentUser?.uid}/chatroom/${data.dispatcherId}`,
+          `responders/${user.currentUser?.uid}/chatroom/${data.dispatcherId}`
         );
         console.log('Attempting to get db');
 
@@ -57,21 +45,21 @@ const ChatScreen = () => {
           await set(
             ref(
               db,
-              `responders/${user.currentUser?.uid}/chatroom/${data.dispatcherId}`,
+              `responders/${user.currentUser?.uid}/chatroom/${data.dispatcherId}`
             ),
             {
               chatroomId: newChatroomId,
-            },
+            }
           );
           console.log('updated responder chatroom');
           await set(
             ref(
               db,
-              `dispatchers/${data.dispatcherId}/chatroom/${user.currentUser?.uid}`,
+              `dispatchers/${data.dispatcherId}/chatroom/${user.currentUser?.uid}`
             ),
             {
               chatroomId: newChatroomId,
-            },
+            }
           );
           console.log('updated dispatcher chatroom');
 
@@ -80,77 +68,60 @@ const ChatScreen = () => {
       }
     };
 
-    checkAndCreateChatroom();
-  }, [user]);
+    if (user.currentUser) {
+      checkAndCreateChatroom();
+    }
+  }, [user.currentUser]);
 
-  // load old messages
   useEffect(() => {
-    const loadMsgs = async () => {
-      const chatroom = await fetchMsgs();
-      setMessages(renderMsgs(chatroom.messages));
-    };
-    loadMsgs();
+    if (chatroomId) {
+      const chatroomRef = ref(db, `chatrooms/${chatroomId}`);
+      const handleNewMessages = snapshot => {
+        const data = snapshot.val();
+        if (data && data.messages) {
+          setMessages(
+            data.messages.reverse().map((msg, idx) => ({
+              ...msg,
+              _id: idx,
+              user: {
+                _id: msg.sender === user.currentUser?.uid ? user.currentUser?.uid : dispatcher.userId,
+                name: msg.sender === user.currentUser?.uid ? user.currentUser?.displayName : 'Dispatcher',
+              },
+            }))
+          );
+        }
+      };
 
-    const chatroomRef = ref(db, `chatrooms/${chatroomId}`);
-    onValue(chatroomRef, snapshot => {
-      const data = snapshot.val();
-      setMessages(renderMsgs(data.messages));
-    });
-    return () => {
-      off(chatroomRef);
-    };
-  }, [chatroomId, fetchMsgs, renderMsgs]);
-
-  const renderMsgs = useCallback(
-    msgs => {
-      return msgs
-        ? msgs.reverse().map((msg, idx) => ({
-            ...msgs,
-            _id: idx,
-            user: {
-              _id:
-                msgs.sender === user.currentUser?.uid
-                  ? user.currentUser?.uid
-                  : dispatcher.userId,
-              name:
-                msgs.sender === user.currentUser?.uid
-                  ? user.currentUser?.displayName
-                  : dispatcher.name,
-            },
-          }))
-        : [];
-    },
-    [user, dispatcher],
-  );
-
-  const fetchMsgs = useCallback(async () => {
-    const chatroomRef = ref(db, `chatrooms/${chatroomId}`);
-    const snapshot = await get(chatroomRef);
-    return snapshot.val();
-  }, [chatroomId]);
+      onValue(chatroomRef, handleNewMessages);
+      return () => {
+        off(chatroomRef, 'value', handleNewMessages);
+      };
+    }
+  }, [chatroomId, user.currentUser, dispatcher]);
 
   const onSend = useCallback(
     async (msg = []) => {
-      // console.log('other user', dispatcher);
-      // console.log('me', user);
-      console.log('messages:', msg);
-      // send message to other user
+      if (!chatroomId || !msg.length) return;
+
       const chatroomRef = ref(db, `chatrooms/${chatroomId}`);
-      const oldMsgs = await fetchMsgs();
-      const lastMsgs = oldMsgs.messages || [];
+      const snapshot = await get(chatroomRef);
+      const oldMsgs = (snapshot.val() && snapshot.val().messages) || [];
+
+      const newMsg = {
+        text: msg[0].text,
+        sender: user.currentUser?.uid,
+        createdAt: new Date().toISOString(),
+      };
+
+      const updatedMessages = [...oldMsgs, newMsg];
+
       update(chatroomRef, {
-        messages: [
-          ...lastMsgs,
-          {
-            text: msg[0].text,
-            sender: user.currentUser?.uid,
-            createdAt: new Date(),
-          },
-        ],
+        messages: updatedMessages,
       });
-      setMessages(previousMessages => GiftedChat.append(previousMessages, msg));
+
+      setMessages(previousMessages => GiftedChat.append(previousMessages, [newMsg]));
     },
-    [chatroomId, fetchMsgs, user.currentUser?.uid],
+    [chatroomId, user.currentUser?.uid]
   );
 
   return (
@@ -158,22 +129,12 @@ const ChatScreen = () => {
       messages={messages}
       onSend={msg => onSend(msg)}
       user={{
-        _id: 1,
-        name: 'Responder',
-        // avatar: '../imgs/responder1.png',
+        _id: user.currentUser?.uid,
+        name: user.currentUser?.displayName,
       }}
       alwaysShowSend
     />
   );
 };
-
-const styles = StyleSheet.create({
-  sendingContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 10,
-    marginBottom: 5,
-  },
-});
 
 export default ChatScreen;
