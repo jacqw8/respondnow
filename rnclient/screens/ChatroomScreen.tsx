@@ -4,7 +4,7 @@ import React, {useCallback, useEffect, useState} from 'react';
 import {db} from '../firebase';
 import {ref, get, onValue, off, update} from 'firebase/database';
 import {Text, View} from 'react-native';
-import ChatScreen from './ChatScreen';
+import ChatScreen from './responderscreens/ChatScreen';
 import UsersScreen from './Users';
 
 const ChatroomScreen = () => {
