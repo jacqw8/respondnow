@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 import {
   View,
   StyleSheet,
@@ -16,6 +16,7 @@ import DispatcherMapScreen from './dispatcherscreens/DispatcherMapScreen';
 import AuthScreen from './dispatcherscreens/AuthScreen';
 import HomeScreen from './HomeScreen';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
+import ChatroomScreen from './ChatroomScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -48,6 +49,7 @@ const DispatcherScreen: React.FC = () => {
       <Tab.Screen name="Login" component={AuthScreen} />
       <Tab.Screen name="Info" component={InfoScreen} />
       <Tab.Screen name="Map" component={DispatcherMapScreen} />
+      <Tab.Screen name="Chat" component={ChatroomScreen} />
     </Tab.Navigator>
   );
 };

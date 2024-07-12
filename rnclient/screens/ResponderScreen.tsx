@@ -17,6 +17,8 @@ import ResponderMapScreen from './responderscreens/ResponderMapScreen';
 import AuthScreen from './responderscreens/AuthScreen';
 import HomeScreen from './HomeScreen';
 import {NavigationProp, useNavigation} from '@react-navigation/native';
+import ChatScreen from './ChatScreen';
+import ChatroomScreen from './ChatroomScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -74,6 +76,7 @@ const ResponderScreen: React.FC = () => {
       <Tab.Screen name="Login" component={AuthScreen} />
       <Tab.Screen name="Info" component={ResponderInfoScreen} />
       <Tab.Screen name="Map" component={ResponderMapScreen} />
+      <Tab.Screen name="Chat" component={ChatScreen} />
     </Tab.Navigator>
   );
 };

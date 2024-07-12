@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 import {
   View,
   StyleSheet,
@@ -21,7 +21,7 @@ const ResponderInfoScreen: React.FC = () => {
   const [info, setInfo] = useState(null);
   const user = getAuth(); // dispatcher user
 
-  useEffect(() => {
+  useCallback(() => {
     const fetchInfo = async () => {
       try {
         const responderRef = ref(db, `responders/${user.currentUser?.uid}`);
@@ -119,8 +119,5 @@ const styles = StyleSheet.create({
 export default ResponderInfoScreen;
 
 // To-do:
-// get caller info onto screen
-// say if you're responding
 // distance from caller
-// caller info
-//
+// look into isochrones

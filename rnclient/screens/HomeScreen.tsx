@@ -27,11 +27,12 @@ const HomeScreen: React.FC = () => {
         onPress={() => navigation.replace('Responder')}>
         <Text style={styles.buttonText}>Responder</Text>
       </TouchableOpacity>
-      <TouchableOpacity
+      {/* maybe update this */}
+      {/* <TouchableOpacity
         style={styles.button}
         onPress={() => navigation.replace('Caller')}>
         <Text style={styles.buttonText}>Caller</Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
     </View>
   );
 };

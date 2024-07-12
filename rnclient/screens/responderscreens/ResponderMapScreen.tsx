@@ -18,6 +18,7 @@ import {
   DatabaseReference,
   runTransaction,
   set,
+  off,
 } from 'firebase/database';
 import {getAuth} from 'firebase/auth';
 
@@ -206,6 +207,7 @@ const ResponderMapScreen: React.FC = () => {
             }
           }
         }
+        off(responderRef);
       } catch (error) {
         console.log('Error getting responder database:', error);
       }
@@ -223,6 +225,7 @@ const ResponderMapScreen: React.FC = () => {
         } else {
           console.log('Caller data doesnt exist');
         }
+        off(callerRef);
       } catch (error) {
         console.log('Error fetching caller data', error);
       }
@@ -235,39 +238,39 @@ const ResponderMapScreen: React.FC = () => {
     return () => clearInterval(interval);
   }, [alertShown, dispatcherId, user]);
 
-  useEffect(() => {
-    const fetchDirections = async () => {
-      const interval = setInterval(async () => {
-        if (marker1 && marker2 && !noRoute) {
-          setIsLoading(true);
-          setLoadingMessage('Getting route coordinates...');
-          try {
-            console.log('getting route api');
-            const token =
-              '5b3ce3597851110001cf6248a9e9053d3f984724af7233d4c4c60f87';
-            const url = `https://api.openrouteservice.org/v2/directions/driving-car?api_key=${token}&start=${marker1.longitude},${marker1.latitude}&end=${marker2.longitude},${marker2.latitude}`;
+  // useEffect(() => {
+  //   const fetchDirections = async () => {
+  //     const interval = setInterval(async () => {
+  //       if (marker1 && marker2 && !noRoute) {
+  //         setIsLoading(true);
+  //         setLoadingMessage('Getting route coordinates...');
+  //         try {
+  //           console.log('getting route api');
+  //           const token =
+  //             '5b3ce3597851110001cf6248a9e9053d3f984724af7233d4c4c60f87';
+  //           const url = `https://api.openrouteservice.org/v2/directions/driving-car?api_key=${token}&start=${marker1.longitude},${marker1.latitude}&end=${marker2.longitude},${marker2.latitude}`;
 
-            console.log('url:', url);
-            const response = await axios.get(url);
-            const coords = response.data.features[0].geometry.coordinates;
-            //   const latlng = coords.map((coord: Number) => ({
-            //     latitude: coord[1],
-            //     longitude: coord[0],
-            //   }));
-            setRouteCoordinates(coords);
-            console.log('route coords:', coords);
-            clearInterval(interval);
-            setIsLoading(false);
-            setNoRoute(true);
-          } catch (error) {
-            console.log('Error fetching directions:', error);
-          }
-        }
-      }, 15000);
-      return () => clearInterval(interval);
-    };
-    fetchDirections();
-  }, [marker1, marker2, routeCoordinates]);
+  //           console.log('url:', url);
+  //           const response = await axios.get(url);
+  //           const coords = response.data.features[0].geometry.coordinates;
+  //           //   const latlng = coords.map((coord: Number) => ({
+  //           //     latitude: coord[1],
+  //           //     longitude: coord[0],
+  //           //   }));
+  //           setRouteCoordinates(coords);
+  //           console.log('route coords:', coords);
+  //           clearInterval(interval);
+  //           setIsLoading(false);
+  //           setNoRoute(true);
+  //         } catch (error) {
+  //           console.log('Error fetching directions:', error);
+  //         }
+  //       }
+  //     }, 15000);
+  //     return () => clearInterval(interval);
+  //   };
+  //   fetchDirections();
+  // }, [marker1, marker2, routeCoordinates]);
 
   const handleViewEmergency = async () => {
     setIgnored(false);
@@ -313,6 +316,9 @@ const ResponderMapScreen: React.FC = () => {
       });
     }
     console.log('Responder added successfully');
+    return () => {
+      off(dispatcherRef);
+    };
   };
 
   useEffect(() => {
@@ -456,14 +462,14 @@ const ResponderMapScreen: React.FC = () => {
             />
           )}
           {/* Render route */}
-          <Polyline
+          {/* <Polyline
             coordinates={routeCoordinates.map(c => ({
               latitude: c[1],
               longitude: c[0],
             }))}
             strokeColor="#44d46a"
             strokeWidth={3}
-          />
+          /> */}
         </MapView>
       )}
       {isLoading && (
