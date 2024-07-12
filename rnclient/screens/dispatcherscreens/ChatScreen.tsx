@@ -1,77 +1,68 @@
 import {getAuth} from 'firebase/auth';
 import React, {useState, useCallback, useEffect} from 'react';
-import {GiftedChat} from 'react-native-gifted-chat';
+import {GiftedChat, Bubble, Send} from 'react-native-gifted-chat';
 import {db} from '../../firebase';
 import {get, off, onValue, push, ref, set, update} from 'firebase/database';
+import {Button, StyleSheet, View} from 'react-native';
 
-const ChatScreen = () => {
+const ChatScreen = ({responder}) => {
   const user = getAuth();
   const [messages, setMessages] = useState([]);
-  const [dispatcher, setDispatcher] = useState(null);
   const [chatroomId, setChatroomId] = useState(null);
 
   useEffect(() => {
     const checkAndCreateChatroom = async () => {
-      const userRef = ref(db, `responders/${user.currentUser?.uid}`);
-      const snap = await get(userRef);
-      if (snap.exists()) {
-        const data = snap.val();
-        setDispatcher({userId: data.dispatcherId});
-        console.log('Attempting to chat with dispatcher:', data.dispatcherId);
+      console.log('Attempting to chat with responder:', responder.userId);
+      const myRef = ref(
+        db,
+        `dispatchers/${user.currentUser?.uid}/chatroom/${responder.userId}`,
+      );
+      console.log('Attempting to get db');
 
-        const myRef = ref(
-          db,
-          `responders/${user.currentUser?.uid}/chatroom/${data.dispatcherId}`,
+      const snapshot = await get(myRef);
+      if (snapshot.exists()) {
+        console.log('Chatroom already exists');
+        const myData = snapshot.val();
+        setChatroomId(myData.chatroomId);
+      } else {
+        console.log('Chatroom does not exist yet', responder.userId);
+
+        const newChatroomRef = push(ref(db, 'chatrooms'), {
+          dispatcher: user.currentUser?.uid,
+          responder: responder.userId,
+          messages: [],
+        });
+        const newChatroomId = newChatroomRef.key;
+        console.log('Added chatroom id', newChatroomId);
+
+        await set(
+          ref(
+            db,
+            `dispatchers/${user.currentUser?.uid}/chatroom/${responder.userId}`,
+          ),
+          {
+            chatroomId: newChatroomId,
+          },
         );
-        console.log('Attempting to get db');
+        console.log('updated responder chatroom');
+        await set(
+          ref(
+            db,
+            `responders/${responder.userId}/chatroom/${user.currentUser?.uid}`,
+          ),
+          {
+            chatroomId: newChatroomId,
+          },
+        );
+        console.log('updated dispatcher chatroom');
 
-        const snapshot = await get(myRef);
-
-        if (snapshot.exists()) {
-          console.log('Chatroom already exists');
-          const myData = snapshot.val();
-          setChatroomId(myData.chatroomId);
-        } else {
-          console.log('Chatroom does not exist yet', data.dispatcherId);
-
-          const newChatroomRef = push(ref(db, 'chatrooms'), {
-            responder: user.currentUser?.uid,
-            dispatcher: data.dispatcherId,
-            messages: [],
-          });
-          const newChatroomId = newChatroomRef.key;
-          console.log('Added chatroom id', newChatroomId);
-
-          await set(
-            ref(
-              db,
-              `responders/${user.currentUser?.uid}/chatroom/${data.dispatcherId}`,
-            ),
-            {
-              chatroomId: newChatroomId,
-            },
-          );
-          console.log('updated responder chatroom');
-          await set(
-            ref(
-              db,
-              `dispatchers/${data.dispatcherId}/chatroom/${user.currentUser?.uid}`,
-            ),
-            {
-              chatroomId: newChatroomId,
-            },
-          );
-          console.log('updated dispatcher chatroom');
-
-          setChatroomId(newChatroomId);
-        }
+        setChatroomId(newChatroomId);
       }
     };
-
     if (user.currentUser) {
       checkAndCreateChatroom();
     }
-  }, [user.currentUser]);
+  }, [responder.userId, user.currentUser]);
 
   useEffect(() => {
     if (chatroomId) {
@@ -82,7 +73,7 @@ const ChatScreen = () => {
           setMessages(
             data.messages.reverse().map((msg, idx) => ({
               ...msg,
-              _id: idx,
+              _id: Math.round(Math.random() * 100000),
               user: {
                 _id: msg.sender,
                 name:
@@ -145,7 +136,7 @@ const ChatScreen = () => {
       //         messages: updatedMessages,
       //       });
 
-//       setMessages(prevMessages => GiftedChat.append(prevMessages, newMsg));
+      //       setMessages(prevMessages => GiftedChat.append(prevMessages, newMsg));
       //       setMessages(previousMessages =>
       //         GiftedChat.append(previousMessages, [
       //           {
@@ -163,6 +154,34 @@ const ChatScreen = () => {
     [chatroomId, user.currentUser?.uid],
   );
 
+  const renderSend = props => {
+    return (
+      <Send {...props}>
+        <View style={styles.sendingContainer}>
+          <Button title="send" color="#007AFF" />
+        </View>
+      </Send>
+    );
+  };
+
+  //   const renderBubble = props => {
+  //     return (
+  //       <Bubble
+  //         {...props}
+  //         wrapperStyle={{
+  //           right: {
+  //             backgroundColor: '#007AFF',
+  //           },
+  //         }}
+  //         textStyle={{
+  //           right: {
+  //             color: '#fff',
+  //           },
+  //         }}
+  //       />
+  //     );
+  //   };
+
   return (
     <GiftedChat
       messages={messages}
@@ -171,9 +190,20 @@ const ChatScreen = () => {
         _id: user.currentUser?.uid,
         name: user.currentUser?.displayName,
       }}
+      //       renderBubble={renderBubble}
+      //       renderSend={renderSend}
       alwaysShowSend
     />
   );
 };
+
+const styles = StyleSheet.create({
+  sendingContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+    marginBottom: 5,
+  },
+});
 
 export default ChatScreen;

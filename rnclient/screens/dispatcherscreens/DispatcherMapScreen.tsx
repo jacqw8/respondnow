@@ -369,23 +369,8 @@ const DispatcherMapScreen: React.FC = () => {
               }}
               title={`Responder ${responder.name}`}
               description="Responder location"
-              image={require('../../imgs/responder1.png')}>
-              <Callout
-                onPress={() =>
-                  onPress({id: responder.userId, name: responder.name})
-                }>
-                <View style={{alignItems: 'center'}}>
-                  <Text>Responder {responder.name}</Text>
-                  <Text>Responder's current location</Text>
-                  <Button
-                    title="Chat"
-                    onPress={() =>
-                      onPress({id: responder.userId, name: responder.name})
-                    }
-                  />
-                </View>
-              </Callout>
-            </Marker>
+              image={require('../../imgs/responder1.png')}
+            />
           ))}
           {/* Caller marker */}
           {marker2 && (

@@ -504,18 +504,8 @@ const ResponderMapScreen: React.FC = () => {
               }}
               title={`Dispatcher ${marker3.name}`}
               description={marker3.description}
-              image={require('../../imgs/emt1.png')}>
-              <Callout
-                onPress={() =>
-                  onPress({id: marker3.userId, name: marker3.name})
-                }>
-                <View style={{alignItems: 'center'}}>
-                  <Text>Dispatcher {marker3.name}</Text>
-                  <Text>Dispatcher's current location</Text>
-                  <Button title="Chat" onPress={onPress} />
-                </View>
-              </Callout>
-            </Marker>
+              image={require('../../imgs/emt1.png')}
+            />
           )}
           {/* Render route */}
           {/* <Polyline

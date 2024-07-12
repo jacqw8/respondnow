@@ -18,7 +18,6 @@ import AuthScreen from './responderscreens/AuthScreen';
 import HomeScreen from './HomeScreen';
 import {NavigationProp, useNavigation} from '@react-navigation/native';
 import ChatScreen from './responderscreens/ChatScreen';
-import ChatroomScreen from './ChatroomScreen';
 
 const Tab = createBottomTabNavigator();
 
