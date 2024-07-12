@@ -1,11 +1,12 @@
-import {View, Text, StyleSheet, ActivityIndicator} from 'react-native';
+import {View, Text, StyleSheet, ActivityIndicator, Button} from 'react-native';
 import React, {useState, useEffect, useRef, useCallback} from 'react';
 import * as Location from 'expo-location';
-import MapView, {Marker, Circle, Polyline} from 'react-native-maps';
+import MapView, {Marker, Circle, Polyline, Callout} from 'react-native-maps';
 import axios from 'axios';
 import {db} from '../../firebase';
 import {ref, onValue, get, update} from 'firebase/database';
 import {getAuth} from 'firebase/auth';
+import {useNavigation} from '@react-navigation/native';
 
 const DispatcherMapScreen: React.FC = () => {
   const [location, setLocation] = useState<any>(null);
@@ -29,6 +30,11 @@ const DispatcherMapScreen: React.FC = () => {
   const [noRoute, setNoRoute] = useState(false);
 
   const mapRef = useRef(null);
+  const navigation = useNavigation();
+
+  const onPress = user => {
+    navigation.navigate('Chat', {user});
+  };
 
   useEffect(() => {
     if (marker1) {
@@ -295,31 +301,31 @@ const DispatcherMapScreen: React.FC = () => {
   }, [marker1, marker2, calculateDistance]);
 
   //   Get route coordinates
-//   useEffect(() => {
-//     const fetchDirections = async () => {
-//       const interval = setInterval(async () => {
-//         if (marker1 && marker2) {
-//           try {
-//             console.log('getting route api');
-//             const token =
-//               '5b3ce3597851110001cf6248a9e9053d3f984724af7233d4c4c60f87';
-//             const url = `https://api.openrouteservice.org/v2/directions/driving-car?api_key=${token}&start=${marker1.longitude},${marker1.latitude}&end=${marker2.longitude},${marker2.latitude}`;
+  //   useEffect(() => {
+  //     const fetchDirections = async () => {
+  //       const interval = setInterval(async () => {
+  //         if (marker1 && marker2) {
+  //           try {
+  //             console.log('getting route api');
+  //             const token =
+  //               '5b3ce3597851110001cf6248a9e9053d3f984724af7233d4c4c60f87';
+  //             const url = `https://api.openrouteservice.org/v2/directions/driving-car?api_key=${token}&start=${marker1.longitude},${marker1.latitude}&end=${marker2.longitude},${marker2.latitude}`;
 
-//             console.log('url:', url);
-//             const response = await axios.get(url);
-//             const coords = response.data.features[0].geometry.coordinates;
-//             setRouteCoordinates(coords);
-//             console.log('route coords:', coords);
-//             clearInterval(interval);
-//           } catch (error) {
-//             console.log('Error fetching directions:', error);
-//           }
-//         }
-//       }, 15000);
-//       return () => clearInterval(interval);
-//     };
-//     fetchDirections();
-//   }, [marker1, marker2, routeCoordinates]);
+  //             console.log('url:', url);
+  //             const response = await axios.get(url);
+  //             const coords = response.data.features[0].geometry.coordinates;
+  //             setRouteCoordinates(coords);
+  //             console.log('route coords:', coords);
+  //             clearInterval(interval);
+  //           } catch (error) {
+  //             console.log('Error fetching directions:', error);
+  //           }
+  //         }
+  //       }, 15000);
+  //       return () => clearInterval(interval);
+  //     };
+  //     fetchDirections();
+  //   }, [marker1, marker2, routeCoordinates]);
 
   if (!location) {
     return (
@@ -363,13 +369,27 @@ const DispatcherMapScreen: React.FC = () => {
               }}
               title={`Responder ${responder.name}`}
               description="Responder location"
-              image={require('../../imgs/responder1.png')}
-            />
+              image={require('../../imgs/responder1.png')}>
+              <Callout
+                onPress={() =>
+                  onPress({id: responder.userId, name: responder.name})
+                }>
+                <View style={{alignItems: 'center'}}>
+                  <Text>Responder {responder.name}</Text>
+                  <Text>Responder's current location</Text>
+                  <Button
+                    title="Chat"
+                    onPress={() =>
+                      onPress({id: responder.userId, name: responder.name})
+                    }
+                  />
+                </View>
+              </Callout>
+            </Marker>
           ))}
           {/* Caller marker */}
           {marker2 && (
             <Marker
-              draggable
               coordinate={{
                 latitude: marker2.latitude,
                 longitude: marker2.longitude,

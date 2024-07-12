@@ -5,10 +5,11 @@ import {
   Alert,
   TouchableOpacity,
   ActivityIndicator,
+  Button,
 } from 'react-native';
 import React, {useState, useEffect, useRef} from 'react';
 import * as Location from 'expo-location';
-import MapView, {Marker, Polyline} from 'react-native-maps';
+import MapView, {Callout, Marker, Polyline} from 'react-native-maps';
 import axios from 'axios';
 import {db} from '../../firebase';
 import {
@@ -19,8 +20,10 @@ import {
   runTransaction,
   set,
   off,
+  push,
 } from 'firebase/database';
 import {getAuth} from 'firebase/auth';
+import {useNavigation} from '@react-navigation/native';
 
 const ResponderMapScreen: React.FC = () => {
   const [location, setLocation] = useState<any>(null);
@@ -40,9 +43,49 @@ const ResponderMapScreen: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [noRoute, setNoRoute] = useState(false);
   const [marker3, setMarker3] = useState<any>(null);
+  const [chatroomId, setChatroomId] = useState(null);
 
   const mapRef = useRef(null);
   const user = getAuth();
+
+  const navigation = useNavigation();
+
+  const onPress = async otherUser => {
+    // // create a chatroom if it doesn't exist
+    // // check if chatroom id exists
+    // console.log('attempting to chat', otherUser.id);
+    // const myRef = ref(
+    //   db,
+    //   `responders/${user.currentUser?.uid}/chatroom/${otherUser.id}`,
+    // );
+    // console.log('attempting to get db');
+    // // chatroom - dispatcherid, chatroomid
+    // const snapshot = await get(myRef);
+    // if (snapshot.exists()) {
+    //   console.log('chatroom already exists');
+    //   // if chatroom with dispatcher already exists, just get the chatroom id
+    //   const myData = snapshot.val();
+    //   setChatroomId(myData.chatroomId);
+    // } else {
+    //   console.log('chatroom doesnt exist yet', otherUser.id);
+    //   // chatroom with this dispatcher doesn't exist
+    //   // make a new chatroom
+    //   const newChatroomRef = push(ref(db, 'chatrooms'), {
+    //     firstUser: user.currentUser?.uid,
+    //     secondUser: otherUser.id,
+    //     messages: [],
+    //   });
+    //   const newChatroomId = newChatroomRef.key;
+    //   console.log('added chatroom id', newChatroomId);
+    //   await set(ref(db, `responders/${user.currentUser?.uid}/chatroom`), {
+    //     otherUser: otherUser.id,
+    //     chatroomId: newChatroomId,
+    //   });
+    //   // set(ref(db), updates);
+    //   setChatroomId(newChatroomId);
+    // }
+    navigation.navigate('Chat');
+  };
 
   useEffect(() => {
     if (marker1) {
@@ -139,7 +182,7 @@ const ResponderMapScreen: React.FC = () => {
                             ),
                             {
                               name: user.currentUser?.displayName,
-                              userId: user.currentUser?.uid
+                              userId: user.currentUser?.uid,
                             },
                           );
                           console.log(
@@ -165,6 +208,7 @@ const ResponderMapScreen: React.FC = () => {
                             longitude: dispatcherData.longitude,
                             description: 'Dispatcher at this location',
                             name: dispatcherData.name,
+                            userId: dispatcherData.userId,
                           });
                           const updates = {};
                           updates[
@@ -199,6 +243,7 @@ const ResponderMapScreen: React.FC = () => {
                     longitude: dispatcherData.longitude,
                     description: 'Dispatcher at this location',
                     name: dispatcherData.name,
+                    userId: dispatcherData.userId,
                   });
                 }
                 setAlertShown(true);
@@ -313,6 +358,7 @@ const ResponderMapScreen: React.FC = () => {
         longitude: dispatcherData.longitude,
         description: 'Dispatcher at this location',
         name: dispatcherData.name,
+        userId: dispatcherData.userId,
       });
     }
     console.log('Responder added successfully');
@@ -425,7 +471,7 @@ const ResponderMapScreen: React.FC = () => {
             latitudeDelta: 0.02,
             longitudeDelta: 0.02,
           }}>
-          {/* Dispatcher marker */}
+          {/* Responder marker */}
           {marker1 && (
             <Marker
               coordinate={{
@@ -458,8 +504,18 @@ const ResponderMapScreen: React.FC = () => {
               }}
               title={`Dispatcher ${marker3.name}`}
               description={marker3.description}
-              image={require('../../imgs/emt1.png')}
-            />
+              image={require('../../imgs/emt1.png')}>
+              <Callout
+                onPress={() =>
+                  onPress({id: marker3.userId, name: marker3.name})
+                }>
+                <View style={{alignItems: 'center'}}>
+                  <Text>Dispatcher {marker3.name}</Text>
+                  <Text>Dispatcher's current location</Text>
+                  <Button title="Chat" onPress={onPress} />
+                </View>
+              </Callout>
+            </Marker>
           )}
           {/* Render route */}
           {/* <Polyline
@@ -521,4 +577,3 @@ const styles = StyleSheet.create({
 export default ResponderMapScreen;
 
 // To-do:
-

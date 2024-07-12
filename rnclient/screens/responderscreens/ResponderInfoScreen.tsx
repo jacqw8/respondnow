@@ -21,7 +21,7 @@ const ResponderInfoScreen: React.FC = () => {
   const [info, setInfo] = useState(null);
   const user = getAuth(); // dispatcher user
 
-  useCallback(() => {
+  useEffect(() => {
     const fetchInfo = async () => {
       try {
         const responderRef = ref(db, `responders/${user.currentUser?.uid}`);
