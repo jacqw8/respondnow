@@ -15,7 +15,7 @@ import InfoScreen from './dispatcherscreens/InfoScreen';
 import DispatcherMapScreen from './dispatcherscreens/DispatcherMapScreen';
 import AuthScreen from './dispatcherscreens/AuthScreen';
 import HomeScreen from './HomeScreen';
-import { NavigationProp, useNavigation } from '@react-navigation/native';
+import {NavigationProp, useNavigation} from '@react-navigation/native';
 import ListScreen from './dispatcherscreens/ListScreen';
 import ChatScreen from './dispatcherscreens/ChatScreen';
 
@@ -37,11 +37,11 @@ const DispatcherScreen: React.FC = () => {
     return (
       <View style={styles.container}>
         <AuthScreen />
-         <TouchableOpacity
-        style={styles.button}
-        onPress={() => navigation.replace('Home')}>
-        <Text style={styles.buttonText}>Home</Text>
-      </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => navigation.replace('Home')}>
+          <Text style={styles.buttonText}>Home</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -56,28 +56,28 @@ const DispatcherScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-        container: {
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-          backgroundColor: '#fff',
-        },
-        button: {
-          backgroundColor: '#007bff',
-          paddingVertical: 15,
-          paddingHorizontal: 30,
-          borderRadius: 5,
-          marginBottom: 20,
-          width: 200,
-          height: 50,
-          justifyContent: 'center',
-          alignItems: 'center',
-        },
-        buttonText: {
-          color: '#fff',
-          fontSize: 18,
-          textAlign: 'center',
-        },
-      });
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+  },
+  button: {
+    backgroundColor: '#007bff',
+    paddingVertical: 15,
+    paddingHorizontal: 30,
+    borderRadius: 5,
+    marginBottom: 20,
+    width: 200,
+    height: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 18,
+    textAlign: 'center',
+  },
+});
 
 export default DispatcherScreen;

@@ -3,12 +3,14 @@ import React, {useState, useCallback, useEffect} from 'react';
 import {GiftedChat, Bubble, Send} from 'react-native-gifted-chat';
 import {db} from '../../firebase';
 import {get, off, onValue, push, ref, set, update} from 'firebase/database';
-import {Button, StyleSheet, View} from 'react-native';
+import {Button, Pressable, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {useNavigation} from '@react-navigation/native';
 
-const ChatScreen = ({responder}) => {
+const ChatScreen = ({responder, goBack}) => {
   const user = getAuth();
   const [messages, setMessages] = useState([]);
   const [chatroomId, setChatroomId] = useState(null);
+  const navigation = useNavigation();
 
   useEffect(() => {
     const checkAndCreateChatroom = async () => {
@@ -165,16 +167,21 @@ const ChatScreen = ({responder}) => {
   };
 
   return (
-    <GiftedChat
-      messages={messages}
-      onSend={msg => onSend(msg)}
-      user={{
-        _id: user.currentUser?.uid,
-        name: user.currentUser?.displayName,
-      }}
-      //       renderSend={renderSend}
-      alwaysShowSend
-    />
+    <>
+      <TouchableOpacity onPress={goBack} style={styles.back}>
+        <Text>Back</Text>
+      </TouchableOpacity>
+      <GiftedChat
+        messages={messages}
+        onSend={msg => onSend(msg)}
+        user={{
+          _id: user.currentUser?.uid,
+          name: user.currentUser?.displayName,
+        }}
+        //       renderSend={renderSend}
+        alwaysShowSend
+      />
+    </>
   );
 };
 
@@ -184,6 +191,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 10,
     marginBottom: 5,
+  },
+  back: {
+    backgroundColor: '#cacaca',
+    height: 41,
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
   },
 });
 

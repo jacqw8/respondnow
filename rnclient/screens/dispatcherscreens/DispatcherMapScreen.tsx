@@ -207,7 +207,7 @@ const DispatcherMapScreen: React.FC = () => {
       }
     };
     // Interval for subsequent executions
-    const interval = setInterval(filterAndSetResponders, 10000);
+    const interval = setInterval(filterAndSetResponders, 5000);
     return () => clearInterval(interval);
   }, [responderLocations, marker2, distance, calculateDistance, user]);
 
