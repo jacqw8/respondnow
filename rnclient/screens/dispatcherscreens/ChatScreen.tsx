@@ -169,7 +169,7 @@ const ChatScreen = ({responder, goBack}) => {
   return (
     <>
       <TouchableOpacity onPress={goBack} style={styles.back}>
-        <Text>Back</Text>
+        <Text style={styles.backText}>Back</Text>
       </TouchableOpacity>
       <GiftedChat
         messages={messages}
@@ -193,11 +193,24 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   back: {
-    backgroundColor: '#cacaca',
-    height: 41,
-    width: '100%',
-    flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
+    marginRight: 10,
+    marginBottom: 5,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    backgroundColor: '#007BFF', // Button background color
+    borderRadius: 10, // Rounded corners
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 5, // For Android shadow
+  },
+  backText: {
+    color: '#fff', // Text color
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 

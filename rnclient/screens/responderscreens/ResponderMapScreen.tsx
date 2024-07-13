@@ -40,7 +40,7 @@ const ResponderMapScreen: React.FC = () => {
   const [dispatcherId, setDispatcherId] = useState<any>(null);
   const [alertShown, setAlertShown] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('Getting locations');
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [noRoute, setNoRoute] = useState(false);
   const [marker3, setMarker3] = useState<any>(null);
   const [chatroomId, setChatroomId] = useState(null);

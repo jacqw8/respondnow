@@ -97,6 +97,7 @@ const ListScreen = () => {
   }, [fetchResponders]);
 
   const navigateToChat = useCallback(responder => {
+        console.log('navigating with responder', responder);
     setChangePage(true);
     setOther(responder);
   }, []);
@@ -124,7 +125,7 @@ const ListScreen = () => {
                         : '#e1e7e8',
                   },
                 ]}
-                onPress={() => navigateToChat(item)}>
+                onPress={() => navigateToChat(item.loc)}>
                 <View style={styles.itemContent}>
                   <Text style={styles.nameText}>{item.loc.name}</Text>
                   <Text style={styles.distanceText}>
@@ -186,3 +187,9 @@ const styles = StyleSheet.create({
 });
 
 export default ListScreen;
+
+// update ui (home, sign in, chat (back button), info screen)
+// train another model including context
+// speech to text
+// spacy model
+
