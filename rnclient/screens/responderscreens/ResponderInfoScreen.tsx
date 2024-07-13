@@ -30,18 +30,20 @@ const ResponderInfoScreen: React.FC = () => {
           const responderData = snapshot.val();
           setResponder(responderData);
           setDispatcherId(responderData.dispatcherId);
-          //     get info from dispatcher id
-          const emergencyRef = ref(
-            db,
-            `emergency/${responderData.dispatcherId}`,
-          );
-          const emergencySnapshot = await get(emergencyRef);
-          if (emergencySnapshot.exists()) {
-            const info = emergencySnapshot.val();
-            setInfo(info);
-            console.log('Emergency info:', info);
-          } else {
-            console.log('No emergency data available');
+          //     get info from dispatcher id, but only if responder is responding
+          if (responderData.isNearEmergency === 'responding') {
+            const emergencyRef = ref(
+              db,
+              `emergency/${responderData.dispatcherId}`,
+            );
+            const emergencySnapshot = await get(emergencyRef);
+            if (emergencySnapshot.exists()) {
+              const info = emergencySnapshot.val();
+              setInfo(info);
+              console.log('Emergency info:', info);
+            } else {
+              console.log('No emergency data available');
+            }
           }
         } else {
           console.log('No responder data available');

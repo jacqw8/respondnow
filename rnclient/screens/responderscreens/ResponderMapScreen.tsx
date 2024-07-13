@@ -39,8 +39,8 @@ const ResponderMapScreen: React.FC = () => {
   const [ignored, setIgnored] = useState(false);
   const [dispatcherId, setDispatcherId] = useState<any>(null);
   const [alertShown, setAlertShown] = useState(false);
-  const [loadingMessage, setLoadingMessage] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState('Getting locations');
+  const [isLoading, setIsLoading] = useState(true);
   const [noRoute, setNoRoute] = useState(false);
   const [marker3, setMarker3] = useState<any>(null);
   const [chatroomId, setChatroomId] = useState(null);
@@ -49,43 +49,6 @@ const ResponderMapScreen: React.FC = () => {
   const user = getAuth();
 
   const navigation = useNavigation();
-
-  const onPress = async otherUser => {
-    // // create a chatroom if it doesn't exist
-    // // check if chatroom id exists
-    // console.log('attempting to chat', otherUser.id);
-    // const myRef = ref(
-    //   db,
-    //   `responders/${user.currentUser?.uid}/chatroom/${otherUser.id}`,
-    // );
-    // console.log('attempting to get db');
-    // // chatroom - dispatcherid, chatroomid
-    // const snapshot = await get(myRef);
-    // if (snapshot.exists()) {
-    //   console.log('chatroom already exists');
-    //   // if chatroom with dispatcher already exists, just get the chatroom id
-    //   const myData = snapshot.val();
-    //   setChatroomId(myData.chatroomId);
-    // } else {
-    //   console.log('chatroom doesnt exist yet', otherUser.id);
-    //   // chatroom with this dispatcher doesn't exist
-    //   // make a new chatroom
-    //   const newChatroomRef = push(ref(db, 'chatrooms'), {
-    //     firstUser: user.currentUser?.uid,
-    //     secondUser: otherUser.id,
-    //     messages: [],
-    //   });
-    //   const newChatroomId = newChatroomRef.key;
-    //   console.log('added chatroom id', newChatroomId);
-    //   await set(ref(db, `responders/${user.currentUser?.uid}/chatroom`), {
-    //     otherUser: otherUser.id,
-    //     chatroomId: newChatroomId,
-    //   });
-    //   // set(ref(db), updates);
-    //   setChatroomId(newChatroomId);
-    // }
-    navigation.navigate('Chat');
-  };
 
   useEffect(() => {
     if (marker1) {
@@ -252,6 +215,7 @@ const ResponderMapScreen: React.FC = () => {
             }
           }
         }
+        setIsLoading(false);
         off(responderRef);
       } catch (error) {
         console.log('Error getting responder database:', error);

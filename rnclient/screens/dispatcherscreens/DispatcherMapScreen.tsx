@@ -51,7 +51,7 @@ const DispatcherMapScreen = () => {
         const callerRef = ref(db, `emergency/${user.uid}`);
         const snapshot = await get(callerRef);
         if (snapshot.exists()) {
-          setLoadingMessage('Fetching caller location...');
+          setLoadingMessage('Fetching locations...');
           const data = snapshot.val();
           setCallerLocation(data);
           setMarker2({
@@ -115,8 +115,9 @@ const DispatcherMapScreen = () => {
               updates[`responders/${responder.userId}/isNearEmergency`] = true;
               updates[`responders/${responder.userId}/dispatcherId`] =
                 user?.uid;
+                return {...responder, isNearEmergency: true};
             }
-            return {...responder, isNearEmergency: true};
+            return {...responder, isNearEmergency: 'responding'};
           } else {
             updates[`responders/${responder.userId}/isNearEmergency`] = null;
             updates[`responders/${responder.userId}/dispatcherId`] = null;
