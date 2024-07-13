@@ -39,8 +39,8 @@ const ListScreen = () => {
     return deg * (Math.PI / 180);
   };
 
-  useEffect(() => {
-    const fetchResponders = async () => {
+  const fetchResponders = useCallback(async () => {
+    try {
       const respondersRef = ref(db, 'responders');
       const snapshot = await get(respondersRef);
       if (snapshot.exists()) {
@@ -50,86 +50,60 @@ const ListScreen = () => {
           ...data[key],
         }));
         setResponders(responderList);
-        // console.log(responderList);
-        if (responderList.length > 0) {
-          const filtered: React.SetStateAction<never[]> = [];
-          const filtered2: React.SetStateAction<never[]> = [];
-          const snap = await get(ref(db, `emergency/${user.currentUser?.uid}`));
-          if (snap.exists()) {
-            // console.log(snap.val());
-            const lat = snap.val().callerLatitude;
-            const lng = snap.val().callerLongitude;
-            const snap1 = await get(
-              ref(db, `dispatchers/${user.currentUser?.uid}`),
-            );
-            const d = calculateDistance(
-              lat,
-              lng,
-              snap1.val().latitude,
-              snap1.val().longitude,
-            );
-        //     console.log('my dist', d);
-            setDistance(d);
-            for (const loc of responderList) {
-              const dist = calculateDistance(
-                lat,
-                lng,
-                loc.latitude,
-                loc.longitude,
-              );
 
-              if (dist <= d) {
-                filtered.push({loc: loc, distance: dist});
-              }
+        // Fetch current emergency details
+        const snap = await get(ref(db, `emergency/${user.currentUser?.uid}`));
+        if (snap.exists()) {
+          const {callerLatitude, callerLongitude} = snap.val();
+          const snap1 = await get(
+            ref(db, `dispatchers/${user.currentUser?.uid}`),
+          );
+          const d = calculateDistance(
+            callerLatitude,
+            callerLongitude,
+            snap1.val().latitude,
+            snap1.val().longitude,
+          );
+          setDistance(d);
+
+          // Filter responders and structure filteredResponders array
+          const filtered = [];
+          responderList.forEach(loc => {
+            const dist = calculateDistance(
+              callerLatitude,
+              callerLongitude,
+              loc.latitude,
+              loc.longitude,
+            );
+
+            if (dist <= d) {
+              filtered.push({loc: loc, distance: dist});
             }
-          }
+          });
+
+        // console.log('filtered', filtered);
           setFilteredResponders(filtered);
-          
-          //   console.log('responders:', responders);
-          //   console.log('filtered', filtered);
         }
       }
-    };
+    } catch (error) {
+      console.error('Error fetching responders:', error);
+    }
+  }, [calculateDistance, user]);
 
+  useEffect(() => {
     fetchResponders();
     const intervalId = setInterval(fetchResponders, 10000);
     return () => clearInterval(intervalId);
-  }, [calculateDistance, responders, user]);
+  }, [fetchResponders]);
 
-  //   const renderItem = ({ item }) => {
-  //         if (item.loc.isResponding) {
-  //           return (
-  //             <View style={{ flexDirection: 'row', justifyContent: 'space-between', padding: 10 }}>
-  //               <View>
-  //                 <Text>{item.name} is responding to the emergency.</Text>
-  //                 <Text>Distance: {item.distance} km</Text>
-  //               </View>
-  //               <Text>{item.distance} km</Text>
-  //             </View>
-  //           );
-  //         } else {
-  //           return (
-  //             <View style={{ flexDirection: 'row', justifyContent: 'space-between', padding: 10 }}>
-  //               <View>
-  //                 <Text>{item.loc.name} is available.</Text>
-  //                 <Text>Distance: {item.distance} km</Text>
-  //               </View>
-  //               <Text>{item.distance} km</Text>
-  //             </View>
-  //           );
-  //         }
-  //       };
-
-  const navigateToChat = responder => {
-    console.log('list screen responder', responder);
-    //     navigation.navigate('Chat', {responder});
+  const navigateToChat = useCallback(responder => {
     setChangePage(true);
-    setOther(responder.loc);
-  };
+    setOther(responder);
+  }, []);
 
-  const goBack = () => {
-        setChangePage(false);
-      };
+  const goBack = useCallback(() => {
+    setChangePage(false);
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -141,7 +115,15 @@ const ListScreen = () => {
             keyExtractor={item => item.loc.userId}
             renderItem={({item}) => (
               <TouchableOpacity
-                style={[styles.item, { backgroundColor: (item.loc.isNearEmergency === 'responding') ? '#e0ffe0' : '#e1e7e8' }]}
+                style={[
+                  styles.item,
+                  {
+                    backgroundColor:
+                      item.loc.isNearEmergency === 'responding'
+                        ? '#e0ffe0'
+                        : '#e1e7e8',
+                  },
+                ]}
                 onPress={() => navigateToChat(item)}>
                 <View style={styles.itemContent}>
                   <Text style={styles.nameText}>{item.loc.name}</Text>
@@ -154,7 +136,7 @@ const ListScreen = () => {
           />
         </>
       ) : (
-        <ChatScreen responder={other} goBack={goBack}/>
+        <ChatScreen responder={other} goBack={goBack} />
       )}
     </View>
   );
@@ -200,10 +182,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     marginLeft: 'auto',
-  },
-  respondingText: {
-    fontSize: 14,
-    //     color: item.isResponding ? '#4CAF50' : '#F44336',
   },
 });
 
