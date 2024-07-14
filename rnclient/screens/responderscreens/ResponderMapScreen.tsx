@@ -231,6 +231,17 @@ const ResponderMapScreen: React.FC = () => {
             longitude: data.callerLongitude,
             description: 'Emergency at this location',
           });
+          if (mapRef.current) {
+            mapRef.current.animateToRegion(
+              {
+                latitude: (marker1.latitude + data.callerLatitude) / 2,
+                longitude: (marker1.longitude + data.callerLongitude) / 2,
+                latitudeDelta: 0.03,
+                longitudeDelta: 0.03,
+              },
+              1000,
+            ); // Duration in milliseconds
+          }
         } else {
           console.log('Caller data doesnt exist');
         }
@@ -477,7 +488,7 @@ const ResponderMapScreen: React.FC = () => {
               latitude: c[1],
               longitude: c[0],
             }))}
-            strokeColor="#44d46a"
+            strokeColor="#2a5730"
             strokeWidth={3}
           />
         </MapView>
