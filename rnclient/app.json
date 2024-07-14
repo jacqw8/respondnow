@@ -1,35 +1,3 @@
 {
-  "name": "rnclient",
-  "ios": {
-    "supportsTablet": true,
-    "bundleIdentifier": "com.anonymous.SpeectToTextApp",
-    "infoPlist": {
-      "NSSpeechRecognitionUsageDescription": "This app uses speech recognition to convert your speech to text.",
-      "NSCameraUsageDescription": "This app uses the camera to let user put a photo in his profile page."
-    }
-  },
-  "android": {
-    "adaptiveIcon": {
-      "foregroundImage": "./assets/adaptive-icon.png",
-      "backgroundColor": "#FFFFFF"
-    },
-    "permissions": [
-      "android.permission.RECORD_AUDIO"
-    ],
-    "package": "com.anonymous.SpeectToTextApp"
-  },
-  "expo": {
-    "plugins": [
-      [
-        "@wdragon/react-native-voice",
-        {
-          "microphonePermission": "Allow voice ",
-          "speechRecognitionPermission": "CUSTOM: Allow $(PRODUCT_NAME) to securely recognize user speech"
-        }
-      ]
-    ],
-    "ios": {
-      "bundleIdentifier": "org.reactjs.native.example.rnclient"
-    }
-  }
+  "name": "rnclient"
 }

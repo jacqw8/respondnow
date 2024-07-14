@@ -24,12 +24,18 @@ const InfoScreen: React.FC = () => {
   const [callerLocation, setCallerLocation] = useState('');
   const [symptoms, setSymptoms] = useState('');
   const [context, setContext] = useState('');
-  
+
+  // Recording
   const [recordedText, setRecordedText] = useState(
-    'Speech to Text app created using React Native',
+    'Emergency at 100 Larkin St San Francisco. The patient is has lost consciousness and is not breathing. They are on the first floor of the building',
   );
   const [isRecording, setIsRecording] = useState(false);
-  
+  const example = {
+    address: '100 larkin st san francisco',
+    symptoms: 'intense abdominal pain, nausea',
+    context: 'first floor, elderly woman',
+  };
+
   //   convert an address to coords
   const addressToCoords = async (address: string) => {
     console.log(
@@ -81,6 +87,18 @@ const InfoScreen: React.FC = () => {
   };
 
   // Record speech
+  const startRecording = async () => {
+    setIsRecording(true);
+    console.log('start recording');
+  };
+
+  const stopRecording = () => {
+    setIsRecording(false);
+    console.log('stop recording');
+    setCallerLocation(example.address);
+    setSymptoms(example.symptoms);
+    setContext(example.context);
+  };
 
   return (
     <View style={styles.container}>
@@ -108,6 +126,14 @@ const InfoScreen: React.FC = () => {
       <TouchableOpacity style={styles.button} onPress={sendToResponder}>
         <Text style={styles.buttonText}>Send Alerts</Text>
       </TouchableOpacity>
+      <TouchableOpacity
+        style={isRecording ? styles.speechButtonActive : styles.speechButton}
+        onPress={isRecording ? stopRecording : startRecording}>
+        <Text style={styles.speechButtonText}>
+          {isRecording ? 'Stop Recording' : 'Start Recording'}
+        </Text>
+      </TouchableOpacity>
+      <Text>{isRecording ? recordedText : 'Example transcript'}</Text>
     </View>
   );
 };
@@ -147,19 +173,30 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 20,
     backgroundColor: '#28a745', // Button background color
-    borderRadius: 10, // Rounded corners
+    borderRadius: 10,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.3,
     shadowRadius: 3,
-    elevation: 5, // For Android shadow
-    marginTop: 20, // Space between buttons
+    elevation: 5,
+    marginTop: 20,
   },
   speechButtonActive: {
-    backgroundColor: '#dc3545', // Active button background color
+    backgroundColor: '#dc3545',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 5,
+    marginTop: 20,
   },
   speechButtonText: {
-    color: '#fff', // Text color
+    color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
   },
