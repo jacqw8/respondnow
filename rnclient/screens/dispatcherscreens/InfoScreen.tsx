@@ -27,7 +27,7 @@ const InfoScreen: React.FC = () => {
 
   // Recording
   const [recordedText, setRecordedText] = useState(
-    'Emergency at 100 Larkin St San Francisco. The patient is has lost consciousness and is not breathing. They are on the first floor of the building',
+    'Emergency at 100 Larkin St San Francisco. The patient is experiencing intense abdominal pain and nausea. They are on the first floor of the building. Patient is an elderly woman',
   );
   const [isRecording, setIsRecording] = useState(false);
   const example = {
