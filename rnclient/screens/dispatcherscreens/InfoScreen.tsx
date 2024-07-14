@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, constructor} from 'react';
 import {
   View,
   StyleSheet,
@@ -17,13 +17,19 @@ const InfoScreen: React.FC = () => {
   const [errorMsg, setErrorMsg] = useState('');
   const [callerLatitude, setCallerLatitude] = useState<any>(null);
   const [callerLongitude, setCallerLongitude] = useState<any>(null);
+  const [isListening, setIsListening] = useState(false);
   const user = getAuth(); // dispatcher user
 
   //   Caller/patient info
   const [callerLocation, setCallerLocation] = useState('');
   const [symptoms, setSymptoms] = useState('');
   const [context, setContext] = useState('');
-
+  
+  const [recordedText, setRecordedText] = useState(
+    'Speech to Text app created using React Native',
+  );
+  const [isRecording, setIsRecording] = useState(false);
+  
   //   convert an address to coords
   const addressToCoords = async (address: string) => {
     console.log(
@@ -73,6 +79,29 @@ const InfoScreen: React.FC = () => {
     navigation.navigate('Map');
     console.log('updated emergency to db');
   };
+
+  // Record speech
+
+  // Voice.onSpeechEnd = () => setIsListening(false);
+  // Voice.onSpeechResults = (event) => {
+  //   console.log('Speech results:', event.value);
+  // };
+
+  // const startListening = async () => {
+  //   try {
+  //     await Voice.start('en-US');
+  //   } catch (e) {
+  //     console.error(e);
+  //   }
+  // };
+
+  // const stopListening = async () => {
+  //   try {
+  //     await Voice.stop();
+  //   } catch (e) {
+  //     console.error(e);
+  //   }
+  // };
 
   return (
     <View style={styles.container}>
@@ -132,6 +161,28 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     textAlign: 'center',
+  },
+  speechButton: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    backgroundColor: '#28a745', // Button background color
+    borderRadius: 10, // Rounded corners
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 5, // For Android shadow
+    marginTop: 20, // Space between buttons
+  },
+  speechButtonActive: {
+    backgroundColor: '#dc3545', // Active button background color
+  },
+  speechButtonText: {
+    color: '#fff', // Text color
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 

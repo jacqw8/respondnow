@@ -14,6 +14,7 @@
 		13B07FC11A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
 		4FA7598F465E05ADD27138ED /* Pods_rnclient_rnclientTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 64412BCBB7960ACD83340CA9 /* Pods_rnclient_rnclientTests.framework */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
+		A927495E2C438E8900B00139 /* libVoice.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A927494D2C438B4400B00139 /* libVoice.a */; };
 		B866E26611BF080CE978293B /* Pods_rnclient.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 89ADC422709822A1E04DE75C /* Pods_rnclient.framework */; };
 /* End PBXBuildFile section */
 
@@ -24,6 +25,20 @@
 			proxyType = 1;
 			remoteGlobalIDString = 13B07F861A680F5B00A75B9A;
 			remoteInfo = rnclient;
+		};
+		A927494C2C438B4400B00139 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A92749482C438B4400B00139 /* Voice.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = DC0729B51EF78E41004EBC83;
+			remoteInfo = Voice;
+		};
+		A92749522C438B6000B00139 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A927494E2C438B6000B00139 /* Voice.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = DC0729B51EF78E41004EBC83;
+			remoteInfo = Voice;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -45,6 +60,8 @@
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = rnclient/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		89ADC422709822A1E04DE75C /* Pods_rnclient.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_rnclient.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		89C6BE57DB24E9ADA2F236DE /* Pods-rnclient-rnclientTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-rnclient-rnclientTests.release.xcconfig"; path = "Target Support Files/Pods-rnclient-rnclientTests/Pods-rnclient-rnclientTests.release.xcconfig"; sourceTree = "<group>"; };
+		A92749482C438B4400B00139 /* Voice.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Voice.xcodeproj; path = "../node_modules/@wdragon/react-native-voice/ios/Voice.xcodeproj"; sourceTree = "<group>"; };
+		A927494E2C438B6000B00139 /* Voice.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Voice.xcodeproj; path = "../node_modules/react-native-voice/ios/Voice.xcodeproj"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F6AB37B13B53DC9FA492667B /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = rnclient/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -62,6 +79,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A927495E2C438E8900B00139 /* libVoice.a in Frameworks */,
 				B866E26611BF080CE978293B /* Pods_rnclient.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -114,6 +132,8 @@
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
 			isa = PBXGroup;
 			children = (
+				A927494E2C438B6000B00139 /* Voice.xcodeproj */,
+				A92749482C438B4400B00139 /* Voice.xcodeproj */,
 			);
 			name = Libraries;
 			sourceTree = "<group>";
@@ -138,6 +158,22 @@
 			children = (
 				13B07F961A680F5B00A75B9A /* rnclient.app */,
 				00E356EE1AD99517003FC87E /* rnclientTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		A92749492C438B4400B00139 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A927494D2C438B4400B00139 /* libVoice.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		A927494F2C438B6000B00139 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A92749532C438B6000B00139 /* libVoice.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -230,6 +266,16 @@
 			);
 			productRefGroup = 83CBBA001A601CBA00E9B192 /* Products */;
 			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = A927494F2C438B6000B00139 /* Products */;
+					ProjectRef = A927494E2C438B6000B00139 /* Voice.xcodeproj */;
+				},
+				{
+					ProductGroup = A92749492C438B4400B00139 /* Products */;
+					ProjectRef = A92749482C438B4400B00139 /* Voice.xcodeproj */;
+				},
+			);
 			projectRoot = "";
 			targets = (
 				13B07F861A680F5B00A75B9A /* rnclient */,
@@ -237,6 +283,23 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXReferenceProxy section */
+		A927494D2C438B4400B00139 /* libVoice.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libVoice.a;
+			remoteRef = A927494C2C438B4400B00139 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		A92749532C438B6000B00139 /* libVoice.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libVoice.a;
+			remoteRef = A92749522C438B6000B00139 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
 		00E356EC1AD99517003FC87E /* Resources */ = {
