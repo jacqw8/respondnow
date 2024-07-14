@@ -14,7 +14,6 @@ import {onAuthStateChanged} from 'firebase/auth';
 import InfoScreen from './dispatcherscreens/InfoScreen';
 import DispatcherMapScreen from './dispatcherscreens/DispatcherMapScreen';
 import AuthScreen from './dispatcherscreens/AuthScreen';
-import HomeScreen from './HomeScreen';
 import {NavigationProp, useNavigation} from '@react-navigation/native';
 import ListScreen from './dispatcherscreens/ListScreen';
 import ChatScreen from './dispatcherscreens/ChatScreen';

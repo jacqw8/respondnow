@@ -1,6 +1,6 @@
 import React, {useState, useEffect, useRef, useCallback} from 'react';
 import {View, Text, StyleSheet, ActivityIndicator} from 'react-native';
-import MapView, {Marker, Circle} from 'react-native-maps';
+import MapView, {Marker, Circle, Polyline} from 'react-native-maps';
 import axios from 'axios';
 import {db} from '../../firebase';
 import {ref, get, update, onValue} from 'firebase/database';
@@ -16,6 +16,7 @@ const DispatcherMapScreen = () => {
   const [distance, setDistance] = useState(0);
   const [deltaLat, setDeltaLat] = useState(null);
   const [deltaLng, setDeltaLng] = useState(null);
+  const [routeCoordinates, setRouteCoordinates] = useState([]);
   const [filteredResponders, setFilteredResponders] = useState([]);
   const [callerLocation, setCallerLocation] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -115,7 +116,7 @@ const DispatcherMapScreen = () => {
               updates[`responders/${responder.userId}/isNearEmergency`] = true;
               updates[`responders/${responder.userId}/dispatcherId`] =
                 user?.uid;
-                return {...responder, isNearEmergency: true};
+              return {...responder, isNearEmergency: true};
             }
             return {...responder, isNearEmergency: 'responding'};
           } else {
@@ -188,31 +189,30 @@ const DispatcherMapScreen = () => {
   }, [marker1, marker2, calculateDistance]);
 
   //   Get route coordinates
-  //   useEffect(() => {
-  //     const fetchDirections = async () => {
-  //       const interval = setInterval(async () => {
-  //         if (marker1 && marker2) {
-  //           try {
-  //             console.log('getting route api');
-  //             const token =
-  //               '5b3ce3597851110001cf6248a9e9053d3f984724af7233d4c4c60f87';
-  //             const url = https://api.openrouteservice.org/v2/directions/driving-car?api_key=${token}&start=${marker1.longitude},${marker1.latitude}&end=${marker2.longitude},${marker2.latitude};
-
-  //             console.log('url:', url);
-  //             const response = await axios.get(url);
-  //             const coords = response.data.features[0].geometry.coordinates;
-  //             setRouteCoordinates(coords);
-  //             console.log('route coords:', coords);
-  //             clearInterval(interval);
-  //           } catch (error) {
-  //             console.log('Error fetching directions:', error);
-  //           }
-  //         }
-  //       }, 15000);
-  //       return () => clearInterval(interval);
-  //     };
-  //     fetchDirections();
-  //   }, [marker1, marker2, routeCoordinates]);
+  useEffect(() => {
+    const fetchDirections = async () => {
+      const interval = setInterval(async () => {
+        if (marker1 && marker2) {
+          try {
+            console.log('getting route api');
+            const token =
+              '5b3ce3597851110001cf6248a9e9053d3f984724af7233d4c4c60f87';
+            const url = `https://api.openrouteservice.org/v2/directions/driving-car?api_key=${token}&start=${marker1.longitude},${marker1.latitude}&end=${marker2.longitude},${marker2.latitude}`;
+            console.log('url:', url);
+            const response = await axios.get(url);
+            const coords = response.data.features[0].geometry.coordinates;
+            setRouteCoordinates(coords);
+            console.log('route coords:', coords);
+            clearInterval(interval);
+          } catch (error) {
+            console.log('Error fetching directions:', error);
+          }
+        }
+      }, 15000);
+      return () => clearInterval(interval);
+    };
+    fetchDirections();
+  }, [marker1, marker2, routeCoordinates]);
 
   if (!location) {
     return (
@@ -275,6 +275,15 @@ const DispatcherMapScreen = () => {
             strokeColor="rgba(227, 49, 58, 0.8)"
           />
         )}
+        {/* Render route */}
+        <Polyline
+          coordinates={routeCoordinates.map(c => ({
+            latitude: c[1],
+            longitude: c[0],
+          }))}
+          strokeColor="#e06565"
+          strokeWidth={3}
+        />
       </MapView>
       {isLoading && (
         <View style={styles.loadingContainer}>
