@@ -82,27 +82,6 @@ const InfoScreen: React.FC = () => {
 
   // Record speech
 
-  // Voice.onSpeechEnd = () => setIsListening(false);
-  // Voice.onSpeechResults = (event) => {
-  //   console.log('Speech results:', event.value);
-  // };
-
-  // const startListening = async () => {
-  //   try {
-  //     await Voice.start('en-US');
-  //   } catch (e) {
-  //     console.error(e);
-  //   }
-  // };
-
-  // const stopListening = async () => {
-  //   try {
-  //     await Voice.stop();
-  //   } catch (e) {
-  //     console.error(e);
-  //   }
-  // };
-
   return (
     <View style={styles.container}>
       {/* Location input */}
