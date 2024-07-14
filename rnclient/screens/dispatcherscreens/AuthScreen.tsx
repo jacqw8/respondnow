@@ -129,41 +129,54 @@ const AuthScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       {user ? (
-        <View>
-          <Text>Welcome {name}!</Text>
-          <Button title="Sign Out" onPress={handleSignOut} />
-        </View>
+        <View style={styles.signOut}>
+        <Text style={styles.label}>Welcome {name}!</Text>
+        <TouchableOpacity
+          style={styles.button}
+          title="Sign Out"
+          onPress={handleSignOut}>
+          <Text style={styles.buttonText}>Sign Out</Text>
+        </TouchableOpacity>
+      </View>
       ) : (
-        <View>
+        <View style={styles.formContainer}>
+          <Text style={styles.label}>Email</Text>
           <TextInput
+            style={styles.input}
             placeholder="Email"
             value={email}
             onChangeText={setEmail}
             autoCapitalize="none"
           />
+          <Text style={styles.label}>Password</Text>
           <TextInput
+            style={styles.input}
             placeholder="Password"
             value={password}
             onChangeText={setPassword}
             secureTextEntry
           />
+          <Text style={styles.label}>Name</Text>
           <TextInput
+            style={styles.input}
             placeholder="Name (Sign up only)"
             value={name}
             onChangeText={setName}
           />
-          <TouchableOpacity
-            style={styles.button}
-            title="Sign Up"
-            onPress={handleSignUp}>
-            <Text style={styles.buttonText}>Sign Up</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.button}
-            title="Log In"
-            onPress={handleSignIn}>
-            <Text style={styles.buttonText}>Log In</Text>
-          </TouchableOpacity>
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity
+              style={styles.button}
+              title="Sign Up"
+              onPress={handleSignUp}>
+              <Text style={styles.buttonText}>Sign Up</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.button}
+              title="Log In"
+              onPress={handleSignIn}>
+              <Text style={styles.buttonText}>Log In</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       )}
     </View>
@@ -177,27 +190,58 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#fff',
   },
+  signOut: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  formContainer: {
+    backgroundColor: '#e8cdcd',
+    width: '100%',
+    maxWidth: 400,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 10,
+    padding: 20,
+    justifyContent: 'center',
+  },
+  buttonContainer: {
+    backgroundColor: '#e8cdcd',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 10,
+  },
   input: {
     height: 100,
-    backgroundColor: '#e5f5f1',
+    backgroundColor: '#f9f5f5',
+    marginBottom: 10,
+    borderRadius: 5,
     width: 300,
     height: 50,
   },
+  label: {
+    marginBottom: 5,
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+  },
   button: {
-    backgroundColor: '#007bff',
-    paddingVertical: 15,
-    paddingHorizontal: 30,
-    borderRadius: 5,
-    marginBottom: 20,
-    width: 300,
+    backgroundColor: '#e06565',
+    width: 200,
     height: 50,
+    borderRadius: 10,
+    marginBottom: 20,
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
+    elevation: 3,
   },
   buttonText: {
     color: '#fff',
     fontSize: 18,
-    textAlign: 'center',
+    fontWeight: 'bold',
   },
 });
 

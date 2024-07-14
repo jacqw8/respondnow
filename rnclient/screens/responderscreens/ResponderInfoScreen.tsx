@@ -80,41 +80,22 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: '#fff',
   },
-  input: {
-    height: 100,
-    backgroundColor: '#e5f5f1',
-    width: 300,
-    height: 50,
-  },
-  button: {
-    backgroundColor: '#007bff',
-    paddingVertical: 15,
-    paddingHorizontal: 30,
-    borderRadius: 5,
-    marginBottom: 20,
-    width: 300,
-    height: 50,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 18,
-    textAlign: 'center',
-  },
   header: {
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 20,
+    textAlign: 'center', // Center align the header
   },
   label: {
     fontSize: 18,
     fontWeight: 'bold',
     marginTop: 10,
+    color: '#000000',
   },
   value: {
     fontSize: 16,
     marginBottom: 10,
+    color: '#000000',
   },
 });
 

@@ -15,7 +15,6 @@ import {ref, get} from 'firebase/database';
 import ResponderInfoScreen from './responderscreens/ResponderInfoScreen';
 import ResponderMapScreen from './responderscreens/ResponderMapScreen';
 import AuthScreen from './responderscreens/AuthScreen';
-import HomeScreen from './HomeScreen';
 import {NavigationProp, useNavigation} from '@react-navigation/native';
 import ChatScreen from './responderscreens/ChatScreen';
 
@@ -34,7 +33,7 @@ const ResponderScreen: React.FC = () => {
   }, []);
 
   // Function to check if the email belongs to a responder
-  const isResponderEmail = async (email) => {
+  const isResponderEmail = async email => {
     try {
       // Check if the email belongs to a responder
       const dbRef = ref(db, 'responders');
@@ -88,20 +87,23 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   button: {
-    backgroundColor: '#007bff',
-    paddingVertical: 15,
-    paddingHorizontal: 30,
-    borderRadius: 5,
-    marginBottom: 20,
+    backgroundColor: '#0f7991',
     width: 200,
     height: 50,
+    borderRadius: 10,
+    marginBottom: 20,
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
+    elevation: 3,
   },
   buttonText: {
     color: '#fff',
     fontSize: 18,
-    textAlign: 'center',
+    fontWeight: 'bold',
   },
 });
 
