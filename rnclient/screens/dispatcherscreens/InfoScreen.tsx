@@ -100,9 +100,16 @@ const InfoScreen: React.FC = () => {
     setContext(example.context);
   };
 
+  const clearFields = () => {
+    setCallerLocation('');
+    setSymptoms('');
+    setContext('');
+  };
+
   return (
     <View style={styles.container}>
       {/* Location input */}
+      <Text style={styles.label}>Address</Text>
       <TextInput
         style={styles.input}
         placeholder="Caller Location"
@@ -110,6 +117,7 @@ const InfoScreen: React.FC = () => {
         onChangeText={setCallerLocation}
       />
       {/* Symptoms input */}
+      <Text style={styles.label}>Symptoms</Text>
       <TextInput
         style={styles.input}
         placeholder="Symptoms"
@@ -117,15 +125,22 @@ const InfoScreen: React.FC = () => {
         onChangeText={setSymptoms}
       />
       {/* Context input */}
+      <Text style={styles.label}>Context</Text>
       <TextInput
         style={styles.input}
         placeholder="Context"
         value={context}
         onChangeText={setContext}
       />
+      {/* Send Alerts button */}
       <TouchableOpacity style={styles.button} onPress={sendToResponder}>
         <Text style={styles.buttonText}>Send Alerts</Text>
       </TouchableOpacity>
+      {/* Clear button */}
+      <TouchableOpacity style={styles.clearButton} onPress={clearFields}>
+        <Text style={styles.clearButtonText}>Clear Fields</Text>
+      </TouchableOpacity>
+      {/* Speech recording button */}
       <TouchableOpacity
         style={isRecording ? styles.speechButtonActive : styles.speechButton}
         onPress={isRecording ? stopRecording : startRecording}>
@@ -133,7 +148,8 @@ const InfoScreen: React.FC = () => {
           {isRecording ? 'Stop Recording' : 'Start Recording'}
         </Text>
       </TouchableOpacity>
-      <Text>{isRecording ? recordedText : 'Example transcript'}</Text>
+      {/* Display recorded text or example transcript */}
+      <Text style={styles.transcriptText}>{isRecording ? recordedText : 'Example transcript'}</Text>
     </View>
   );
 };
@@ -141,24 +157,25 @@ const InfoScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    // justifyContent: 'center',
+    // alignItems: 'center',
     backgroundColor: '#fff',
+    padding: 20,
   },
   input: {
-    height: 100,
-    backgroundColor: '#e5f5f1',
-    width: 300,
     height: 50,
+    backgroundColor: '#f9f5f5',
+    width: '100%',
+    marginBottom: 10,
+    paddingHorizontal: 10,
+    borderRadius: 5,
   },
   button: {
-    backgroundColor: '#007bff',
-    paddingVertical: 15,
-    paddingHorizontal: 30,
-    borderRadius: 5,
-    marginBottom: 20,
-    width: 300,
-    height: 50,
+    backgroundColor: '#e06565',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    marginTop: 20,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -166,19 +183,15 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     textAlign: 'center',
+    fontWeight: 'bold',
   },
   speechButton: {
     justifyContent: 'center',
     alignItems: 'center',
     paddingVertical: 10,
     paddingHorizontal: 20,
-    backgroundColor: '#28a745', // Button background color
+    backgroundColor: '#28a745',
     borderRadius: 10,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.3,
-    shadowRadius: 3,
-    elevation: 5,
     marginTop: 20,
   },
   speechButtonActive: {
@@ -188,17 +201,40 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 10,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.3,
-    shadowRadius: 3,
-    elevation: 5,
     marginTop: 20,
   },
   speechButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  transcriptText: {
+    marginTop: 20,
+    fontSize: 16,
+    fontStyle: 'italic',
+    color: '#888',
+  },
+  clearButton: {
+    backgroundColor: '#f0ad4e',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    marginTop: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  clearButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  label: {
+    marginBottom: 5,
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
   },
 });
 
