@@ -1,3 +1,10 @@
 {
-  "name": "rnclient"
+  "name": "rnclient",
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "416e3392-b666-4651-b59b-034940fe38e4"
+      }
+    }
+  }
 }
